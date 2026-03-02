@@ -1,5 +1,5 @@
+""" Example code demonstrating how to use httpx to authenticate and call RDP APIs with the requests like interface. This is a synchronous version of the example_httpx.py file, using httpx in blocking mode. """
 import os
-import sys
 import time
 import httpx
 from dotenv import load_dotenv
@@ -20,9 +20,9 @@ def authenticate_rdp(machine_id, password, app_key, url) -> dict:
 
     # Send authentication request to the OAuth token endpoint.
     # `data=payload` sends a form body required by this endpoint.
-    # `verify=False` skips SSL verification (for local/dev only).
+    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     response = httpx.post(url, data=payload, verify=False)
-    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors
+    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors, automatic handles of non-200 responses
     return response.json()
 
 def get_chain(ric, token, url) -> dict:
@@ -37,8 +37,9 @@ def get_chain(ric, token, url) -> dict:
         "universe": ric
     }
     # Request chain data from the pricing chains endpoint.
+    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     response = httpx.get(url, params=parameters, headers=headers, verify=False)
-    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors
+    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors, automatic handles of non-200 responses
     return response.json()
 
 def post_historical_event(rics, token, url) -> dict:
@@ -55,9 +56,10 @@ def post_historical_event(rics, token, url) -> dict:
     }
 
     # `json=payload` serializes and sends JSON in the request body.
+    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     response = httpx.post(url, json=payload, headers=headers, verify=False)
-    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors
-    return response.json()  
+    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors, automatic handles of non-200 responses
+    return response.json()
 
 def post_authen_refresh(appkey, refresh_token,url) -> dict:
     """Refresh the access token using the refresh token."""
@@ -69,11 +71,12 @@ def post_authen_refresh(appkey, refresh_token,url) -> dict:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded"
     }
+    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     response = httpx.post(url, data=payload, headers=headers, verify=False)
-    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors
+    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors, automatic handles of non-200 responses
     return response.json()
 
-def post_authen_revoke(token, appkey, url) -> None:
+def post_authen_revoke(token, appkey, url) -> None: 
     """Revoke the access token to end the session."""
     headers = {            
         "Content-Type": "application/x-www-form-urlencoded"
@@ -81,9 +84,9 @@ def post_authen_revoke(token, appkey, url) -> None:
 
     payload = f"token={token}"
     auth = httpx.BasicAuth(username=appkey, password="")
-
+    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     response = httpx.post(url, data=payload, headers=headers, auth=auth, verify=False)
-    response.raise_for_status()
+    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors, automatic handles of non-2xx responses
 
 def main() -> None:
     """Run the end-to-end demo: auth, chain data, and historical events."""
@@ -98,7 +101,7 @@ def main() -> None:
 
     # OAuth token endpoint used to obtain access token.
     auth_url = f"{base_url}/auth/oauth2/v1/token"
-    
+    token_data = {}
     try:
         token_data = authenticate_rdp(machine_id, password, app_key, auth_url)
         print("Authentication successful! Status code: 200")
@@ -110,9 +113,10 @@ def main() -> None:
     except httpx.RequestError as e:
         # Network-level error (e.g. connection refused, DNS failure, timeout)
         print(f"Request error: {e}")
+        return
 
     # Continue only when an access token is available.
-    if token_data["access_token"]:
+    if token_data.get("access_token"):
        
         print("Access token received successfully.")
         # Example single RIC lookup for chain endpoint using HTTP GET.
@@ -155,6 +159,7 @@ def main() -> None:
             print(f"HTTP error while refreshing token: {e_refresh.response.status_code} - {e_refresh.response.text}")
         except httpx.RequestError as e_refresh:
             print(f"Request error while refreshing token: {e_refresh}")
+            return
 
         time.sleep(5)  # Sleep for 5 seconds before revoking token (for demo purposes)
         revoke_url = f"{base_url}/auth/oauth2/v1/revoke"
@@ -166,9 +171,10 @@ def main() -> None:
             print(f"HTTP error while revoking token: {e_revoke.response.status_code} - {e_revoke.response.text}")
         except httpx.RequestError as e_revoke:
             print(f"Request error while revoking token: {e_revoke}")
+            return
     else:
         print("Failed to receive access token. Exiting...")
-        sys.exit(1) 
+        return
 
 
 if __name__ == "__main__":
