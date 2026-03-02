@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import httpx
 from dotenv import load_dotenv
 
@@ -37,7 +38,7 @@ def get_chain(ric, token, url) -> dict:
     }
     # Request chain data from the pricing chains endpoint.
     response = httpx.get(url, params=parameters, headers=headers, verify=False)
-    response.raise_for_status()
+    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors
     return response.json()
 
 def post_historical_event(rics, token, url) -> dict:
@@ -55,8 +56,22 @@ def post_historical_event(rics, token, url) -> dict:
 
     # `json=payload` serializes and sends JSON in the request body.
     response = httpx.post(url, json=payload, headers=headers, verify=False)
-    response.raise_for_status()
+    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors
     return response.json()  
+
+def post_authen_refresh(appkey, refresh_token,url) -> dict:
+    """Refresh the access token using the refresh token."""
+    payload = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": appkey,
+    }
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    response = httpx.post(url, data=payload, headers=headers, verify=False)
+    response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors
+    return response.json()
 
 def post_authen_revoke(token, appkey, url) -> None:
     """Revoke the access token to end the session."""
@@ -82,10 +97,10 @@ def main() -> None:
     base_url = os.getenv("RDP_BASE_URL")  # Default to Refinitiv API base URL if not set
 
     # OAuth token endpoint used to obtain access token.
-    url = f"{base_url}/auth/oauth2/v1/token"
+    auth_url = f"{base_url}/auth/oauth2/v1/token"
     
     try:
-        token_data = authenticate_rdp(machine_id, password, app_key, url)
+        token_data = authenticate_rdp(machine_id, password, app_key, auth_url)
         print("Authentication successful! Status code: 200")
         # For demos only: print token to verify auth worked.
         print(token_data["access_token"])
@@ -126,6 +141,22 @@ def main() -> None:
         except httpx.RequestError as e:
             print(f"Request error while posting historical event data: {e}")
 
+        time.sleep(5)  # Sleep for 5 seconds before refreshing token (for demo purposes)
+        try:
+            refresh_token = token_data.get("refresh_token")
+            if refresh_token:
+                print("Refreshing access token...")
+                refreshed_token_data = post_authen_refresh(app_key, refresh_token, auth_url)
+                print("Access token refreshed successfully!")
+                print(f" New Access Token: {refreshed_token_data['access_token']}")
+            else:
+                print("No refresh token available. Skipping token refresh.")
+        except httpx.HTTPStatusError as e_refresh:
+            print(f"HTTP error while refreshing token: {e_refresh.response.status_code} - {e_refresh.response.text}")
+        except httpx.RequestError as e_refresh:
+            print(f"Request error while refreshing token: {e_refresh}")
+
+        time.sleep(5)  # Sleep for 5 seconds before revoking token (for demo purposes)
         revoke_url = f"{base_url}/auth/oauth2/v1/revoke"
         try:
             print("Revoking access token...")
