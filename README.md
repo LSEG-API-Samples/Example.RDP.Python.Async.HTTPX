@@ -1,6 +1,6 @@
 # RDP_HTTPX
 
-Small Python example that uses [`httpx`](https://www.python-httpx.org/) to authenticate with the Refinitiv Data Platform (RDP) OAuth2 **Password Grant** flow and call a couple of RDP REST endpoints.
+Small Python example that uses [`httpx`](https://www.python-httpx.org/) to authenticate with the [Data Platform APIs](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) (RDP, also known as Delivery Platform) OAuth2 **Password Grant** flow and call a couple of RDP REST endpoints.
 
 ## What’s included
 
@@ -18,6 +18,8 @@ Small Python example that uses [`httpx`](https://www.python-httpx.org/) to authe
   - **Machine ID**
   - **Password**
   - **AppKey**
+
+Please contact LSEG Representative and Account manager to help you get Data Platform access.
 
 ## Setup
 
