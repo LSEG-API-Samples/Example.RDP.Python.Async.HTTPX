@@ -24,7 +24,7 @@ def authenticate_rdp(machine_id, password, app_key, url) -> dict:
     response.raise_for_status()  # Raise an exception for 4xx/5xx HTTP errors
     return response.json()
 
-def get_chain(ric, token, url):
+def get_chain(ric, token, url) -> dict:
     """Fetch chain data for a single RIC symbol using an access token."""
     # Bearer token is required for authorized API requests.
     headers = {
@@ -40,7 +40,7 @@ def get_chain(ric, token, url):
     response.raise_for_status()
     return response.json()
 
-def post_historical_event(rics, token, url):
+def post_historical_event(rics, token, url) -> dict:
     """Request historical event data for multiple RICs."""
     # Send the token in Authorization header for API access.
     headers = {
@@ -58,6 +58,18 @@ def post_historical_event(rics, token, url):
     response.raise_for_status()
     return response.json()  
 
+def post_authen_revoke(token, appkey, url) -> None:
+    """Revoke the access token to end the session."""
+    headers = {            
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+
+    payload = f"token={token}"
+    auth = httpx.BasicAuth(username=appkey, password="")
+
+    response = httpx.post(url, data=payload, headers=headers, auth=auth, verify=False)
+    response.raise_for_status()
+
 def main() -> None:
     """Run the end-to-end demo: auth, chain data, and historical events."""
     # Load key/value pairs from src/.env into process environment.
@@ -67,7 +79,7 @@ def main() -> None:
     machine_id = os.getenv("MACHINEID_RDP")
     password = os.getenv("PASSWORD_RDP")
     app_key = os.getenv("APPKEY_RDP")
-    base_url = os.getenv("BASE_URL_RDP")  # Default to Refinitiv API base URL if not set
+    base_url = os.getenv("RDP_BASE_URL")  # Default to Refinitiv API base URL if not set
 
     # OAuth token endpoint used to obtain access token.
     url = f"{base_url}/auth/oauth2/v1/token"
@@ -113,6 +125,16 @@ def main() -> None:
             print(f"HTTP error while posting historical event data: {e.response.status_code} - {e.response.text}")
         except httpx.RequestError as e:
             print(f"Request error while posting historical event data: {e}")
+
+        revoke_url = f"{base_url}/auth/oauth2/v1/revoke"
+        try:
+            print("Revoking access token...")
+            post_authen_revoke(token_data["access_token"], app_key, revoke_url)
+            print("Access token revoked successfully.")
+        except httpx.HTTPStatusError as e_revoke:
+            print(f"HTTP error while revoking token: {e_revoke.response.status_code} - {e_revoke.response.text}")
+        except httpx.RequestError as e_revoke:
+            print(f"Request error while revoking token: {e_revoke}")
     else:
         print("Failed to receive access token. Exiting...")
         sys.exit(1) 
