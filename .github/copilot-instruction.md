@@ -227,3 +227,26 @@ git branch
 
 Expected output: `* main`
 
+---
+
+## Part 3: Validation
+
+### Step 12 — Run a package smoke test
+
+Run a one-line Python check to confirm `httpx` and `python-dotenv` are installed and import correctly.
+
+- **Windows (PowerShell/CMD):**
+  ```powershell
+  .\.venv\Scripts\python.exe -c "import httpx, dotenv, importlib.metadata as m; print('httpx', httpx.__version__); print('python-dotenv', m.version('python-dotenv')); print('dotenv module path', dotenv.__file__)"
+  ```
+- **macOS / Linux:**
+  ```bash
+  .venv/bin/python -c "import httpx, dotenv, importlib.metadata as m; print('httpx', httpx.__version__); print('python-dotenv', m.version('python-dotenv')); print('dotenv module path', dotenv.__file__)"
+  ```
+
+If successful, output should include:
+
+- `httpx` followed by a version number
+- `python-dotenv` followed by a version number
+- `dotenv module path` pointing to the virtual environment site-packages directory
+
