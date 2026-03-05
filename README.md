@@ -1,42 +1,49 @@
 # RDP_HTTPX
 
-Small Python example that uses [`httpx`](https://www.python-httpx.org/) to authenticate with the [Data Platform APIs](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) (RDP, also known as Delivery Platform) OAuth2 **Password Grant** flow and call a couple of RDP REST endpoints.
+Small Python examples that use [`httpx`](https://www.python-httpx.org/) to authenticate with [LSEG Data Platform APIs](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) (RDP, also known as Delivery Platform)  using OAuth2 Password Grant, then call sample REST endpoints.
 
-## What’s included
+## Included Scripts
 
-- `src/example_sync_httpx.py` – synchronous (blocking) demo script that:
-  - Authenticates: `POST /auth/oauth2/v1/token`
-  - Calls Pricing Chains: `GET /data/pricing/chains/v1/`
-  - Calls Historical Pricing Events: `POST /data/historical-pricing/v1/views/events`
-  - Refreshes token (refresh_token grant)
-  - Revokes token: `POST /auth/oauth2/v1/revoke`
+- `src/example_sync_httpx.py`
+  - Synchronous (blocking) requests with direct `httpx` calls.
+  - Demonstrates:
+    - `POST /auth/oauth2/v1/token`
+    - `GET /data/pricing/chains/v1/`
+    - `POST /data/historical-pricing/v1/views/events`
+    - Refresh token flow (`grant_type=refresh_token`)
+    - `POST /auth/oauth2/v1/revoke`
+
+- `src/example_client.py`
+  - Synchronous (blocking) script using one shared `httpx.Client` (connection pooling + shared config).
+  - Includes simple environment validation and reusable helper methods.
+  - Demonstrates the same endpoint flow as above.
 
 ## Prerequisites
 
-- Python 3.10+ recommended
-- RDP credentials:
-  - **Machine ID**
-  - **Password**
-  - **AppKey**
+- Python 3.10+
+- LSEG RDP credentials:
+  - Machine ID
+  - Password
+  - AppKey
 
-Please contact LSEG Representative and Account manager to help you get Data Platform access.
+If you do not have access yet, contact your LSEG representative or account manager.
 
 ## Setup
 
-1) Create and activate a virtual environment.
+1. Create and activate a virtual environment.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-2) Install dependencies.
+2. Install dependencies.
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-3) Create your environment file.
+3. Create your environment file.
 
 Copy `src/.env.example` to `src/.env` and fill in values:
 
@@ -54,14 +61,18 @@ APPKEY_RDP=<RDP AppKey>
 python .\src\example_sync_httpx.py
 ```
 
-The script prints the access token (demo only), then prints the JSON responses from the sample endpoints.
+```powershell
+python .\src\example_client.py
+```
 
-## Security notes
+For demo purposes, scripts print token/output payloads and endpoint responses.
 
-The example uses `verify=False` in `httpx` calls, which **disables TLS certificate verification**. This is unsafe for production—remove `verify=False` (or provide a proper CA bundle) for real usage. I use it in this project to avoid LSEG beloved ZScaler.
+## Security Notes
 
-Also avoid printing access tokens in real applications.
+- The examples currently use `verify=False`, which disables TLS certificate verification.
+- This is not safe for production. Remove `verify=False` (or provide a proper CA bundle) for real usage.
+- Avoid printing access tokens in production applications/logs.
 
 ## License
 
-Apache 2.0 — see [LICENSE.md](LICENSE.md).
+Apache 2.0. See [LICENSE.md](LICENSE.md).
