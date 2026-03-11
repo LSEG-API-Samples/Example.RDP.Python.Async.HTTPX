@@ -76,3 +76,9 @@ For demo purposes, scripts print token/output payloads and endpoint responses.
 ## License
 
 Apache 2.0. See [LICENSE.md](LICENSE.md).
+
+## Reference
+
+- https://realpython.com/async-io-python/
+- https://www.twilio.com/en-us/blog/asynchronous-http-requests-in-python-with-httpx-and-asyncio
+

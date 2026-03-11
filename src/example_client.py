@@ -1,7 +1,6 @@
 import json
 import os
 import time
-from typing import Any, Sequence
 
 import httpx
 from dotenv import load_dotenv
@@ -45,7 +44,6 @@ def post_authentication(machine_id, password, app_key, url, client):
 
     # Send authentication request to the OAuth token endpoint.
     # `data=payload` sends a form body required by this endpoint.
-    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     response = client.post(url, data=payload)
     response.raise_for_status()  # Raise for 4xx/5xx API failures.
     return response.json()
@@ -59,7 +57,6 @@ def get_chain(ric, token, url, client):
         "universe": ric
     }
     # Request chain data from the pricing chains endpoint.
-    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     response = client.get(url, params=parameters, headers=headers)
     response.raise_for_status()
     return response.json()
@@ -75,7 +72,7 @@ def post_historical_event(rics, token, url, client):
     }
 
     # `json=payload` serializes and sends JSON in the request body.
-    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
+
     response = client.post(url, json=payload, headers=headers)
     response.raise_for_status()
     return response.json()
@@ -91,7 +88,7 @@ def post_auth_refresh(app_key, refresh_token, url, client):
     headers = {
         "Content-Type": "application/x-www-form-urlencoded"
     }
-    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
+
     response = client.post(url, data=payload, headers=headers)
     response.raise_for_status()
     return response.json()
@@ -105,7 +102,6 @@ def post_auth_revoke(token, app_key, url, client):
 
     payload = f"token={token}"
     auth = httpx.BasicAuth(username=app_key, password="")
-    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     response = client.post(url, data=payload, headers=headers, auth=auth)
     response.raise_for_status()
 
@@ -144,26 +140,26 @@ def main() -> None:
             print(f"Chain data for {ric}:", json.dumps(chain_data, indent=2))
 
             # Example multi-RIC request for historical events endpoint.
-            rics = ["LSEG.L", "VOD.L", "BP.L"]
-            print(f"Posting historical event data... for RICs: {rics}")
-            historical_event_data = post_historical_event(rics, access_token, HISTORICAL_EVENT_URL, client)
-            print("Historical event data retrieved successfully!")
-            print(f"Historical event data for {rics}:", json.dumps(historical_event_data))
+            # rics = ["LSEG.L", "VOD.L", "BP.L"]
+            # print(f"Posting historical event data... for RICs: {rics}")
+            # historical_event_data = post_historical_event(rics, access_token, HISTORICAL_EVENT_URL, client)
+            # print("Historical event data retrieved successfully!")
+            # print(f"Historical event data for {rics}:", json.dumps(historical_event_data))
 
-            refresh_token = token_data.get("refresh_token")
-            if refresh_token:
-                time.sleep(5)  # Sleep for 5 seconds before refreshing token (for demo purposes)
-                print("Refreshing access token...")
-                refreshed_token_data = post_auth_refresh(app_key, refresh_token, AUTH_TOKEN_URL, client)
-                print("Token refreshed successfully!")
-                print("New Access Token:", json.dumps(refreshed_token_data["access_token"], indent=2))
-            else:
-                print("No refresh token available. Cannot refresh access token.")
+            # refresh_token = token_data.get("refresh_token")
+            # if refresh_token:
+            #     time.sleep(5)  # Sleep for 5 seconds before refreshing token (for demo purposes)
+            #     print("Refreshing access token...")
+            #     refreshed_token_data = post_auth_refresh(app_key, refresh_token, AUTH_TOKEN_URL, client)
+            #     print("Token refreshed successfully!")
+            #     print("New Access Token:", json.dumps(refreshed_token_data["access_token"], indent=2))
+            # else:
+            #     print("No refresh token available. Cannot refresh access token.")
 
-            time.sleep(5)  # Sleep for 5 seconds before revoking token (for demo purposes)
-            print("Revoking access token...")
-            post_auth_revoke(access_token, app_key, AUTH_REVOKE_URL, client)
-            print("Access token revoked successfully.")
+            # time.sleep(5)  # Sleep for 5 seconds before revoking token (for demo purposes)
+            # print("Revoking access token...")
+            # post_auth_revoke(access_token, app_key, AUTH_REVOKE_URL, client)
+            # print("Access token revoked successfully.")
 
         else:
             print("Failed to receive access token. Exiting...")
@@ -181,4 +177,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    start = time.perf_counter()
     main()
+    elapsed = time.perf_counter() - start
+    print(f"{__file__} executed in {elapsed:0.2f} seconds.")
