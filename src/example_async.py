@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 AUTH_TOKEN_URL = "/auth/oauth2/v1/token"
 CHAIN_URL = "/data/pricing/chains/v1/"
 
-RICS = ["EFX=", "0#.SPX", "0#.FTSE"]  # Fetched concurrently
+RICS = ["EFX=", "0#.HSI", "0#.FTSE","0#.SPX"]  # Fetched concurrently
 
 async def post_authentication(machine_id, password, app_key, url, client):
     """Authenticate to RDP and return the token response as JSON."""
@@ -33,7 +33,7 @@ async def post_authentication(machine_id, password, app_key, url, client):
     response_auth.raise_for_status()  # Raise for 4xx/5xx API failures.
     return response_auth.json()
 
-async def get_chain(ric, token, url, client):
+async def get_chain(ric, token, url, client, semaphore=None):
     """Fetch chain data for a single RIC symbol using an access token."""
     headers = {
         "Authorization": f"Bearer {token}",
@@ -45,7 +45,12 @@ async def get_chain(ric, token, url, client):
     }
 
     # Request chain data from the pricing chains endpoint.
-    response_chain = await client.get(url, params=parameters, headers=headers)
+    if semaphore:
+        async with semaphore:
+            response_chain = await client.get(url, params=parameters, headers=headers)
+    else:
+        response_chain = await client.get(url, params=parameters, headers=headers)
+
     response_chain.raise_for_status()
     return response_chain.json()
 
@@ -94,11 +99,39 @@ async def main():
         #     else:
         #         print(f"Chain data for '{ric}': {result}")
 
-        ric = "EFX="
-        print(f"Fetching chain data... for RIC: {ric}")
-        chain_data = await get_chain(ric, access_token, CHAIN_URL, client)
-        print("Chain data retrieved successfully!")
-        print(f"Chain data for {ric}:", json.dumps(chain_data, indent=2))
+        # --- Fetch all RICs concurrently ---
+        # TaskGroup cancels all remaining tasks as soon as one raises.
+        # Exceptions are collected into an ExceptionGroup — use `except*` to handle them.
+        MAX_CONCURRENT_TASKS = 3
+        sem = asyncio.Semaphore(MAX_CONCURRENT_TASKS)  # Limit concurrent tasks
+        sem = None  # No concurrency limit
+        try:
+            async with asyncio.TaskGroup() as tg:
+                tasks = {ric: tg.create_task(get_chain(ric, access_token, CHAIN_URL, client, sem)) for ric in RICS}
+
+            # Reached only if ALL tasks succeeded.
+            results = {ric: task.result() for ric, task in tasks.items()}
+            print("Chain data for all RICs:", json.dumps(results, indent=2))
+
+        except* httpx.HTTPStatusError as eg:
+            for exc in eg.exceptions:  
+                print(f"HTTP error fetching chain data: {exc.request.url} -> {exc.response.status_code}: {exc.response.text}")
+        except* httpx.HTTPError as eg:
+            for exc in eg.exceptions:  
+                print(f"Network error fetching chain data: {exc}")
+
+
+        # try:
+        #     ric = "EFX="
+        #     ric = "0#.FTSE"
+        #     print(f"Fetching chain data... for RIC: {ric}")
+        #     chain_data = await get_chain(ric, access_token, CHAIN_URL, client)
+        #     print("Chain data retrieved successfully!")
+        #     print(f"Chain data for {ric}:", json.dumps(chain_data, indent=2))
+        # except httpx.HTTPStatusError as e:
+        #     print(f"HTTP error fetching chain data:{e.request.url}: {e.response.status_code} - {e.response.text}")      
+        # except httpx.HTTPError as e:
+        #     print(f"Network error fetching chain data:{e.request.url}: {e}")
 
 
 if __name__ == "__main__":
