@@ -118,6 +118,7 @@ def main() -> None:
     base_url = _require_env("RDP_BASE_URL")
 
     # Reuse one connection pool across all requests.
+    # `verify=False` skips SSL verification (for local/dev only). This is not recommended for production use. I use it to avoid LSEG beloved ZScaler.
     client = httpx.Client(
         verify=False,
         base_url=base_url,

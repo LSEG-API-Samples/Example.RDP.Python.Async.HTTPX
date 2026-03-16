@@ -177,3 +177,5 @@ pyrightconfig.json
 
 # Virtual environment
 .venv/
+
+src/example_async_taskgroup.py
