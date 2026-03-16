@@ -14,6 +14,7 @@ Python examples that use [`httpx`](https://www.python-httpx.org/) to authenticat
 src/
 ├── .env.example                 # Environment variable template
 ├── simple_call_nb.ipynb         # Jupyter notebook — synchronous, shared httpx.Client
+├── async_call_nb.ipynb          # Jupyter notebook — async, asyncio.gather() with Semaphore
 ├── example_sync_httpx.py        # Synchronous — direct httpx module calls (no shared client)
 ├── example_client.py            # Synchronous — shared httpx.Client
 ├── example_async_simple.py      # Async — sequential awaits in a loop
@@ -41,6 +42,27 @@ Notebook structure:
 3. Credentials loaded from `src/.env`
 4. Helper functions (`post_authentication`, `post_auth_revoke`, `get_historical_interday_summaries`)
 5. Main execution block — authenticate, fetch data sequentially, revoke token
+6. Elapsed time output
+
+### `src/async_call_nb.ipynb` — Async, concurrent Jupyter notebook (`asyncio.gather`)
+
+Interactive notebook version of the async concurrent workflow using `httpx.AsyncClient` and `asyncio.gather()`. Jupyter's native top-level `await` support means no `asyncio.run()` wrapper is needed.
+
+Demonstrates:
+- `POST /auth/oauth2/v1/token` — async OAuth 2.0 Password Grant authentication
+- `GET /data/historical-pricing/v1/views/interday-summaries/{ric}` — daily OHLCV data fetched concurrently for 10 RICs
+- `asyncio.Semaphore` — caps concurrent in-flight requests (default: 3) to respect server rate limits
+- `asyncio.gather(return_exceptions=True)` — all RIC coroutines run simultaneously; one failure does not cancel the rest
+- Per-result error inspection: `httpx.HTTPStatusError`, `httpx.RequestError`, generic `Exception`
+- `async with httpx.AsyncClient` — shared connection pool, closed cleanly on exit
+- Wall-clock timing across the full workflow
+
+Notebook structure:
+1. Imports
+2. Constants (endpoint paths, RIC list)
+3. Credentials loaded from `src/.env`
+4. Helper functions (`post_authentication`, `post_auth_revoke`, `get_historical_interday_summaries`)
+5. Main execution block — authenticate, gather concurrent RIC fetches, per-result error handling
 6. Elapsed time output
 
 ## Included Scripts
@@ -134,6 +156,9 @@ APPKEY_RDP=<RDP AppKey>
 ```powershell
 # Jupyter notebook (synchronous)
 jupyter lab src/simple_call_nb.ipynb
+
+# Jupyter notebook (async — asyncio.gather)
+jupyter lab src/async_call_nb.ipynb
 
 # Synchronous
 python .\src\example_client.py
