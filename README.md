@@ -13,12 +13,35 @@ Python examples that use [`httpx`](https://www.python-httpx.org/) to authenticat
 ├── requirements.txt             # Pinned dependencies
 src/
 ├── .env.example                 # Environment variable template
+├── simple_call_nb.ipynb         # Jupyter notebook — synchronous, shared httpx.Client
 ├── example_sync_httpx.py        # Synchronous — direct httpx module calls (no shared client)
 ├── example_client.py            # Synchronous — shared httpx.Client
 ├── example_async_simple.py      # Async — sequential awaits in a loop
 ├── example_async_gather.py      # Async — asyncio.gather() with Semaphore
+├── example_async_taskgroup.py   # Async — asyncio.TaskGroup with Semaphore
 └── async_learn.py               # Learning script — ExceptionGroup / except*
 ```
+
+## Included Notebook
+
+### `src/simple_call_nb.ipynb` — Synchronous, step-by-step Jupyter notebook
+
+Interactive notebook version of the synchronous workflow. Each logical step is a separate cell with a markdown explanation above it, making it easy to run and inspect results incrementally.
+
+Demonstrates:
+- `POST /auth/oauth2/v1/token` — OAuth 2.0 Password Grant authentication
+- `GET /data/historical-pricing/v1/views/interday-summaries/{ric}` — daily OHLCV data with corporate-action adjustments for 10 RICs
+- `POST /auth/oauth2/v1/revoke` — session token revocation using HTTP Basic Auth
+- Shared `httpx.Client` inside a `with` block for clean connection-pool teardown
+- Wall-clock timing across the full workflow
+
+Notebook structure:
+1. Imports
+2. Constants (endpoint paths, RIC list)
+3. Credentials loaded from `src/.env`
+4. Helper functions (`post_authentication`, `post_auth_revoke`, `get_historical_interday_summaries`)
+5. Main execution block — authenticate, fetch data sequentially, revoke token
+6. Elapsed time output
 
 ## Included Scripts
 
@@ -109,6 +132,9 @@ APPKEY_RDP=<RDP AppKey>
 ## Run
 
 ```powershell
+# Jupyter notebook (synchronous)
+jupyter lab src/simple_call_nb.ipynb
+
 # Synchronous
 python .\src\example_client.py
 
