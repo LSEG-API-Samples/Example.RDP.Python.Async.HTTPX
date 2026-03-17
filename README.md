@@ -1,11 +1,21 @@
-# Data Platform APIs HTTP REST Application using HTTPX
+# Data Platform APIs HTTP REST Application using Httpx
 
 - Version: 1.0
 - Last update: Mar 2026
 - Environment: Python + JupyterLab + Data Platform Account
 - Prerequisite: Data Platform access/entitlements
 
-Python examples that use [`httpx`](https://www.python-httpx.org/) to authenticate with [LSEG Data Platform APIs](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) (RDP, also known as Delivery Platform) using OAuth 2.0 Password Grant, then call sample REST endpoints — covering both synchronous and asynchronous patterns.
+## Overview
+
+The [Requests](https://requests.readthedocs.io/en/latest/) library is widely regarded as *the de facto* standard HTTP client for Python applications. Many Python developers first learn REST API calls through Requests — including through our [Data Platform APIs Tutorials](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials) (or you can try RDP HTTP operations with the [built-in http.client](https://docs.python.org/3/library/http.client.html) if you enjoy a challenge.).
+
+That said, there are other Python HTTP libraries worth considering — [HTTPX](https://www.python-httpx.org/), [Aiohttp](https://docs.aiohttp.org/en/stable/), [Urllib3](https://urllib3.readthedocs.io/en/stable/), [Grequests](https://pypi.org/project/grequests/), [PycURL](http://pycurl.io/docs/latest/index.html), and more — each offering different trade-offs in performance and features that may better suit your requirements.
+
+I was drawn to HTTPX because it provides a **requests-compatible API** while also supporting **asynchronous operations** out of the box. That combination made migrating from Requests to HTTPX straightforward, with the added benefit of async support when needed.
+
+This project demonstrates how to use [`httpx`](https://www.python-httpx.org/) to authenticate and retrieve data from [LSEG Data Platform APIs](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) via HTTP endpoints — covering both synchronous and asynchronous patterns for comparison.
+
+**Note**: A basic knowledge of Python [built-in asyncio](https://docs.python.org/3/library/asyncio.html) library is required to understand example codes.
 
 ## What is Data Platform APIs?
 
@@ -78,6 +88,69 @@ async def main():
 
 asyncio.run(main())
 ```
+
+## What are Synchronous and Asynchronous Execution Models?
+
+**Synchronous** code runs tasks one at a time in a strict sequence — each task must finish before the next one starts. The application pauses and waits at every blocking call. For example, the `httpx.get()` function call below (equivalent to `requests.get()`) blocks the entire program until the HTTP response arrives:
+
+```python
+import httpx
+
+def fetch(url):
+    """Fetch the content of the URL synchronously."""
+    r = httpx.get(url, verify=False)
+    print("Fetched:", url, "status:", r.status_code)
+    return r.text
+
+def main():
+    """ Main function."""
+    fetch("https://example.org")
+    print("This line prints ONLY after the request is done!")
+
+if __name__ == "__main__":
+    main()
+```
+
+![synchronous code result](images/01_httpx_sync.png)
+
+If the HTTP request takes 60 seconds, the program idles for those 60 seconds before executing the next line. For a single request this is fine, but it becomes a bottleneck when you need to fetch data for many symbols or endpoints.
+
+On the other hand, **Asynchronous** code allows multiple tasks to run concurrently in a non-blocking manner. While one task is waiting for I/O (such as a network response), the event loop can hand control to another task (execute next line of codes) instead of sitting idle. The example below uses `asyncio.create_task()` to launch a fetch in the background and immediately continues to the next line — without waiting for the response:
+
+```python
+import asyncio
+import httpx 
+
+async def fetch(url):
+    """Fetch the content of the URL asynchronously."""
+    async with httpx.AsyncClient(verify=False) as client:
+        r = await client.get(url)
+        print("Fetched:", url, "status:", r.status_code)
+        return r.text
+
+async def main():
+    """ Main function."""
+    asyncio.create_task(fetch("https://example.org"))
+    print("Task launched and not awaited!")
+    # Sleep to allow the fetch task to complete before the program exits.
+    await asyncio.sleep(2) 
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+![asynchronous code result](images/02_httpx_async.png)
+
+The real payoff of async comes when you have **many requests to make**. With `asyncio.gather()`, you can fire all of them concurrently so the total wall-clock time is roughly that of the single slowest response — instead of the sum of all response times. That is exactly the pattern used in `example_async_gather.py` and `async_call_nb.ipynb` examples for fetching multiple RICs.
+
+## Prerequisites
+
+- Python 3.11+ (required for `asyncio.TaskGroup` and `except*`)
+- LSEG Data Platform credentials with Historical Pricing permission:
+  - Machine ID
+  - Password
+  - AppKey
+
+If you do not have access yet, contact your LSEG representative or account manager.
 
 ## Project Structure
 
@@ -171,15 +244,7 @@ Demonstrates:
 - `POST /auth/oauth2/v1/revoke` — session revocation using HTTP Basic Auth
 - Per-call `verify=False` passed directly to each `httpx` function
 
-## Prerequisites
 
-- Python 3.11+ (required for `asyncio.TaskGroup` and `except*`)
-- LSEG RDP credentials:
-  - Machine ID
-  - Password
-  - AppKey
-
-If you do not have access yet, contact your LSEG representative or account manager.
 
 ## Setup
 
@@ -235,7 +300,15 @@ Apache 2.0. See [LICENSE.md](LICENSE.md).
 
 ## References
 
-- https://realpython.com/async-io-python/
-- https://www.twilio.com/en-us/blog/asynchronous-http-requests-in-python-with-httpx-and-asyncio
-- https://docs.python.org/3/library/asyncio-task.html#task-groups
+For further details, please check out the following resources:
+
+- [LSEG Data Platform](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) on the [LSEG Developers Portal](https://developers.lseg.com/en/) website.
+- [HTTPX library](https://www.python-httpx.org/) and [GitHub](https://github.com/encode/httpx) pages.
+- [Python Asyncio library](https://docs.python.org/3/library/asyncio.html) page.
+- [Python's asyncio: A Hands-On Walkthrough](https://realpython.com/async-io-python/)
+- [Asynchronous HTTP Requests in Python with HTTPX and asyncio](https://www.twilio.com/en-us/blog/asynchronous-http-requests-in-python-with-httpx-and-asyncio)
+- [Asyncio gather function document](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather) page.
+- [Asyncio TaskGroup function document](https://docs.python.org/3/library/asyncio-task.html#task-groups) page.
+
+For any questions related to Data Platform APIs, please use the [Developers Community Q&A page](https://community.developers.refinitiv.com/).
 
