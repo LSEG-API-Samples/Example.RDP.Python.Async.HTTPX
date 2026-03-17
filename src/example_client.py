@@ -2,14 +2,15 @@ import json
 import os
 import time
 
+from attrs import fields
 import httpx
 from dotenv import load_dotenv
 
 
 AUTH_TOKEN_URL = "/auth/oauth2/v1/token"
 AUTH_REVOKE_URL = "/auth/oauth2/v1/revoke"
-CHAIN_URL = "/data/pricing/chains/v1/"
-HISTORICAL_EVENT_URL = "/data/historical-pricing/v1/views/events"
+HISTORICAL_INTERDAY_SUMMARIES_URL = "/data/historical-pricing/v1/views/interday-summaries/"
+HISTORICAL_RICS = ["AAPL.O","MSFT.O","META.O","NVDA.O","GOOG.O","ORCL.N","IBM.N","PLTR.O","AMZN.O","AVGO.O","TSLA.O","CRM.N","AMD.O","INTC.O","CSCO.O"]  # Fetched concurrently
 
 
 def _bearer_headers(token) -> dict[str, str]:
@@ -77,21 +78,38 @@ def post_historical_event(rics, token, url, client):
     response.raise_for_status()
     return response.json()
 
+def get_historical_interday_summaries(ric, token, url, client, interval, start, end, fields):
+    """Request historical Interday summaries data for a single RIC."""
+    print(f"Fetching historical interday summaries... for RIC: {ric}")
 
-def post_auth_refresh(app_key, refresh_token, url, client):
-    """Refresh the access token using the refresh token."""
-    payload = {
-        "grant_type": "refresh_token",
-        "refresh_token": refresh_token,
-        "client_id": app_key,
-    }
+    # Bearer token authenticates the caller; Content-Type signals a JSON response is expected.
     headers = {
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
     }
 
-    response = client.post(url, data=payload, headers=headers)
-    response.raise_for_status()
-    return response.json()
+    # Build the query string for the interday-summaries endpoint.
+    # adjustments: apply standard corporate-action and price corrections so that
+    # the returned series is comparable across the full date range.
+    # fields: comma-separated list of data columns to include in the response.
+    params = {
+        "interval": interval,
+        "start": start,
+        "end": end,
+        "adjustments": "exchangeCorrection,manualCorrection,CCH,CRE,RPO,RTS",
+        "fields": ",".join(fields)
+    }
+
+    response_history =  client.get(f"{url}{ric}", params=params, headers=headers)
+
+    print(f"Request URL: {response_history.url}")
+
+    # Raise an exception for 4xx/5xx HTTP errors; lets the caller handle
+    # status-specific logic (e.g. 429 rate-limit vs. 401 auth failure).
+    response_history.raise_for_status()
+
+    # Deserialise and return the JSON payload for further processing by the caller.
+    return response_history.json()
 
 
 def post_auth_revoke(token, app_key, url, client):
@@ -131,40 +149,25 @@ def main() -> None:
         token_data = post_authentication(machine_id, password, app_key, AUTH_TOKEN_URL, client)
         print("Authentication successful. Access token obtained.")
         access_token = token_data.get("access_token")
-        if access_token:
-            print("Access Token:", json.dumps(access_token, indent=2))
+        
+        # Fetch historical interday summaries for each RIC sequentially.
+        # For better performance with many RICs, consider concurrent requests (e.g. using asyncio or threading).
 
-            ric = "EFX="
-            print(f"Fetching chain data... for RIC: {ric}")
-            chain_data = get_chain(ric, access_token, CHAIN_URL, client)
-            print("Chain data retrieved successfully!")
-            print(f"Chain data for {ric}:", json.dumps(chain_data, indent=2))
-
-            # Example multi-RIC request for historical events endpoint.
-            # rics = ["LSEG.L", "VOD.L", "BP.L"]
-            # print(f"Posting historical event data... for RICs: {rics}")
-            # historical_event_data = post_historical_event(rics, access_token, HISTORICAL_EVENT_URL, client)
-            # print("Historical event data retrieved successfully!")
-            # print(f"Historical event data for {rics}:", json.dumps(historical_event_data))
-
-            # refresh_token = token_data.get("refresh_token")
-            # if refresh_token:
-            #     time.sleep(5)  # Sleep for 5 seconds before refreshing token (for demo purposes)
-            #     print("Refreshing access token...")
-            #     refreshed_token_data = post_auth_refresh(app_key, refresh_token, AUTH_TOKEN_URL, client)
-            #     print("Token refreshed successfully!")
-            #     print("New Access Token:", json.dumps(refreshed_token_data["access_token"], indent=2))
-            # else:
-            #     print("No refresh token available. Cannot refresh access token.")
-
-            # time.sleep(5)  # Sleep for 5 seconds before revoking token (for demo purposes)
-            # print("Revoking access token...")
-            # post_auth_revoke(access_token, app_key, AUTH_REVOKE_URL, client)
-            # print("Access token revoked successfully.")
-
-        else:
-            print("Failed to receive access token. Exiting...")
-            return
+        fields = ["TRDPRC_1", "BID", "ASK"]
+        start_date = "2025-11-01T00:00:00Z"
+        end_date = "2026-02-28T23:59:59Z"
+        
+        for ric in HISTORICAL_RICS:
+            history_data =  get_historical_interday_summaries(
+                ric, access_token, HISTORICAL_INTERDAY_SUMMARIES_URL, client, interval="P1D", start=start_date, end=end_date, fields=fields
+            )
+            print("Historical interday summaries retrieved successfully!")
+            print(f"Historical interday summaries for '{ric}': {history_data}\n\n")
+        
+        time.sleep(1)  # Sleep briefly to ensure all requests are completed before revoking the token.
+        print("Revoking access token...")
+        post_auth_revoke(access_token, app_key, AUTH_REVOKE_URL, client)
+        print("Access token revoked successfully.\n")
     except httpx.HTTPStatusError as exc:
         print(f"HTTP error occurred during HTTP Request: {exc.request.url}: {exc.response.status_code} - {exc.response.text}")
     except httpx.RequestError as exc:

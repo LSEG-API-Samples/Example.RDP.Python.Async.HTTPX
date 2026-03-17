@@ -5,12 +5,12 @@ import httpx
 from dotenv import load_dotenv
 
 AUTH_TOKEN_URL = "/auth/oauth2/v1/token"
-#HISTORICAL_INTRADAY_SUMMARIES_URL = "/data/historical-pricing/v1/views/intraday-summaries/"
+AUTH_REVOKE_URL = "/auth/oauth2/v1/revoke"
 HISTORICAL_INTERDAY_SUMMARIES_URL = "/data/historical-pricing/v1/views/interday-summaries/"
 
 HISTORICAL_RICS = ["AAPL.O","MSFT.O","META.O","NVDA.O","GOOG.O","ORCL.N","IBM.N","PLTR.O","AMZN.O","AVGO.O"]  # Fetched concurrently
 
-async def post_authentication(machine_id, password, app_key, url, client):
+async def post_authentication_async(machine_id, password, app_key, url, client):
     """Authenticate to RDP and return the token response as JSON."""
     # Build the OAuth 2.0 Password Grant request payload.
     # Sent as application/x-www-form-urlencoded (httpx encodes a dict automatically).
@@ -33,8 +33,19 @@ async def post_authentication(machine_id, password, app_key, url, client):
     response_auth.raise_for_status()  # Raise for 4xx/5xx API failures.
     return response_auth.json()
 
+async def post_auth_revoke_async(token, app_key, url, client):
+    """Revoke the access token to end the session."""
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
 
-async def get_historical_interday_summaries(ric, token, url, client, interval, start, end, fields, semaphore=None):
+    payload = f"token={token}"
+    auth = httpx.BasicAuth(username=app_key, password="")
+    response = await client.post(url, data=payload, headers=headers, auth=auth)
+    response.raise_for_status()
+
+
+async def get_historical_interday_summaries_async(ric, token, url, client, interval, start, end, fields, semaphore=None):
     """Request historical Interday summaries data for a single RIC.
     """
     print(f"Fetching historical interday summaries... for RIC: {ric}")
@@ -76,36 +87,6 @@ async def get_historical_interday_summaries(ric, token, url, client, interval, s
     return response_history.json()
 
 
-# async def get_historical_intraday_summaries(ric, token, url, client, interval, start, end):
-#     """Request historical Intraday summaries data"""
-#     print(f"Fetching historical intraday summaries... for RIC: {ric}")
-#     # Send the token in Authorization header for API access.
-#     headers = {
-#         "Authorization": f"Bearer {token}",
-#         "Content-Type": "application/json"
-#     }
-
-#     # Parse incoming date strings and reformat to ISO 8601 nanosecond precision
-#     # required by the RDP API (e.g. "2026-01-01T00:00:00.000000000Z").
-#     # %f covers microseconds (6 digits); "000" pads to 9 digits (nanoseconds).
-#     def to_nanosecond_str(dt_str: str) -> str:
-#         dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
-#         return dt.strftime("%Y-%m-%dT%H:%M:%S.%f") + "000Z"
-
-#     # parameters for intraday-summaries request.
-#     params = {
-#         "interval": interval,
-#         "start": to_nanosecond_str(start),
-#         "end": to_nanosecond_str(end),
-#         "session": "normal"
-#     }
-
-#     response_history = await client.get(f"{url}{ric}", params=params, headers=headers)
-#     print(f"Request URL: {response_history.url}")
-#     # Raise an exception for 4xx/5xx HTTP errors, automatic handles of non-200 responses
-#     response_history.raise_for_status()  
-#     return response_history.json()
-
 
 async def main():
     """Main entry point for the async example."""
@@ -127,7 +108,7 @@ async def main():
     ) as client:
         # --- Authentication (must complete before any data requests) ---
         try:
-            token_data = await post_authentication(machine_id, password, app_key, AUTH_TOKEN_URL, client)
+            token_data = await post_authentication_async(machine_id, password, app_key, AUTH_TOKEN_URL, client)
             print("Authentication successful. Access token obtained.")
 
             access_token = token_data.get("access_token")
@@ -138,12 +119,12 @@ async def main():
 
             # Limit how many RIC requests run simultaneously to avoid
             # overwhelming the server or hitting rate limits.
-            max_concurrent_tasks = 3
+            max_concurrent_tasks = 5
             sem = asyncio.Semaphore(max_concurrent_tasks)
             
             # Build one coroutine per RIC; the semaphore inside get_chain
             # ensures at most max_concurrent_tasks run at the same time.
-            tasks_history = [get_historical_interday_summaries(ric, access_token, HISTORICAL_INTERDAY_SUMMARIES_URL, client, interval="P1D", start=start, end=end, fields=fields, semaphore=sem) for ric in HISTORICAL_RICS]
+            tasks_history = [get_historical_interday_summaries_async(ric, access_token, HISTORICAL_INTERDAY_SUMMARIES_URL, client, interval="P1D", start=start, end=end, fields=fields, semaphore=sem) for ric in HISTORICAL_RICS]
 
             # gather() runs all tasks concurrently. return_exceptions=True
             # prevents a single failure from cancelling the remaining tasks —
@@ -177,6 +158,11 @@ async def main():
             # Catch-all for unexpected errors (e.g. JSON decode, assertion).
             print(f"Unexpected error: {e}")
             return
+        
+        await asyncio.sleep(1)  # Just to ensure all output is printed before revoking the token.
+        print("Revoking access token...")
+        await post_auth_revoke_async(access_token, app_key, AUTH_REVOKE_URL, client)
+        print("Access token revoked successfully.\n")
 
 if __name__ == "__main__":
     start = time.perf_counter()
