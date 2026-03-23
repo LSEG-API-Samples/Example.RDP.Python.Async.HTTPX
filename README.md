@@ -115,6 +115,8 @@ if __name__ == "__main__":
 
 If the HTTP request takes 60 seconds, the program idles for those 60 seconds before executing the next line. For a single request this is fine, but it becomes a bottleneck when you need to fetch data for many symbols or endpoints.
 
+![synchronous](images/synchronous_simple.png)
+
 On the other hand, **Asynchronous** code allows multiple tasks to run concurrently in a non-blocking manner. While one task is waiting for I/O (such as a network response), the event loop can hand control to another task (execute next line of codes) instead of sitting idle. The example below uses `asyncio.create_task()` to launch a fetch in the background and immediately continues to the next line — without waiting for the response:
 
 ```python
@@ -140,113 +142,36 @@ if __name__ == "__main__":
 
 ![asynchronous code result](images/02_httpx_async.png)
 
+![asynchronous](images/asynchronous_simple.png)
+
 The real payoff of async comes when you have **many requests to make**. With `asyncio.gather()`, you can fire all of them concurrently so the total wall-clock time is roughly that of the single slowest response — instead of the sum of all response times. That is exactly the pattern used in `example_async_gather.py` and `async_call_nb.ipynb` examples for fetching multiple RICs.
 
 ## Prerequisites
 
-- Python 3.11+ (required for `asyncio.TaskGroup` and `except*`)
+- Python 3.11+
 - LSEG Data Platform credentials with Historical Pricing permission:
   - Machine ID
   - Password
   - AppKey
 
-If you do not have access yet, contact your LSEG representative or account manager.
+Please your LSEG representative or account manager for the Data Platform Access
 
 ## Project Structure
 
 ```
 ├── requirements.txt             # Pinned dependencies
+├── README.md                    # Project README file
+├── LICENSE.md                   # Project LICENSE file
+├── Article.md                   # Project Implementation detail (article) file
 src/
 ├── .env.example                 # Environment variable template
-├── sync_call_nb.ipynb         # Jupyter notebook — synchronous, shared httpx.Client
+├── sync_call_nb.ipynb           # Jupyter notebook — synchronous, shared httpx.Client
 ├── async_call_nb.ipynb          # Jupyter notebook — async, asyncio.gather() with Semaphore
-├── example_sync_httpx.py        # Synchronous — direct httpx module calls (no shared client)
-├── example_client.py            # Synchronous — shared httpx.Client
-└── example_async_gather.py      # Async — asyncio.gather() with Semaphore
+├── example_client.py            # Synchronous — shared httpx.Client console app
+└── example_async_gather.py      # Async — asyncio.gather() with Semaphore console app
 ```
 
-## Included Notebook
-
-### `src/sync_call_nb.ipynb` — Synchronous, step-by-step Jupyter notebook
-
-Interactive notebook version of the synchronous workflow. Each logical step is a separate cell with a markdown explanation above it, making it easy to run and inspect results incrementally.
-
-Demonstrates:
-- `POST /auth/oauth2/v1/token` — OAuth 2.0 Password Grant authentication
-- `GET /data/historical-pricing/v1/views/interday-summaries/{ric}` — daily OHLCV data with corporate-action adjustments for 10 RICs
-- `POST /auth/oauth2/v1/revoke` — session token revocation using HTTP Basic Auth
-- Shared `httpx.Client` inside a `with` block for clean connection-pool teardown
-- Wall-clock timing across the full workflow
-
-Notebook structure:
-1. Imports
-2. Constants (endpoint paths, RIC list)
-3. Credentials loaded from `src/.env`
-4. Helper functions (`post_authentication`, `post_auth_revoke`, `get_historical_interday_summaries`)
-5. Main execution block — authenticate, fetch data sequentially, revoke token
-6. Elapsed time output
-
-### `src/async_call_nb.ipynb` — Async, concurrent Jupyter notebook (`asyncio.gather`)
-
-Interactive notebook version of the async concurrent workflow using `httpx.AsyncClient` and `asyncio.gather()`. Jupyter's native top-level `await` support means no `asyncio.run()` wrapper is needed.
-
-Demonstrates:
-- `POST /auth/oauth2/v1/token` — async OAuth 2.0 Password Grant authentication
-- `GET /data/historical-pricing/v1/views/interday-summaries/{ric}` — daily OHLCV data fetched concurrently for 10 RICs
-- `asyncio.Semaphore` — caps concurrent in-flight requests (default: 3) to respect server rate limits
-- `asyncio.gather(return_exceptions=True)` — all RIC coroutines run simultaneously; one failure does not cancel the rest
-- Per-result error inspection: `httpx.HTTPStatusError`, `httpx.RequestError`, generic `Exception`
-- `async with httpx.AsyncClient` — shared connection pool, closed cleanly on exit
-- Wall-clock timing across the full workflow
-
-Notebook structure:
-1. Imports
-2. Constants (endpoint paths, RIC list)
-3. Credentials loaded from `src/.env`
-4. Helper functions (`post_authentication`, `post_auth_revoke`, `get_historical_interday_summaries`)
-5. Main execution block — authenticate, gather concurrent RIC fetches, per-result error handling
-6. Elapsed time output
-
-## Included Scripts
-
-### `src/example_async_gather.py` — Async with `asyncio.gather()` and `Semaphore`
-
-Async script that fires all RIC requests concurrently via `asyncio.gather()`, with an `asyncio.Semaphore` to cap the number of in-flight requests and avoid hitting server rate limits.
-
-Demonstrates:
-- `POST /auth/oauth2/v1/token` — async authentication
-- `GET /data/historical-pricing/v1/views/interday-summaries/{ric}` — concurrent fetches for 10 RICs
-- `asyncio.Semaphore` — limits concurrent requests (default: 3)
-- `return_exceptions=True` — prevents one failure from cancelling the rest; each result is inspected individually
-- Per-result error handling: `httpx.HTTPStatusError`, `httpx.RequestError`, generic `Exception`
-
-### `src/example_client.py` — Synchronous with shared client
-
-Synchronous (blocking) script using a single shared `httpx.Client` instance for connection pooling and consistent configuration across all requests.
-
-Demonstrates:
-- `POST /auth/oauth2/v1/token` — OAuth 2.0 Password Grant authentication
-- `GET /data/pricing/chains/v1/` — chain constituent lookup
-- `POST /data/historical-pricing/v1/views/events` — historical trade events for multiple RICs (commented out, ready to enable)
-- Refresh token flow (`grant_type=refresh_token`) — commented out, ready to enable
-- `POST /auth/oauth2/v1/revoke` — session revocation — commented out, ready to enable
-- Environment validation with a `_require_env()` helper that fails fast on missing credentials
-
-### `src/example_sync_httpx.py` — Synchronous, direct `httpx` calls
-
-Simplest synchronous example. Each function calls `httpx.get()` / `httpx.post()` directly — no shared client or connection pool. Good as a minimal reference or quick script.
-
-Demonstrates:
-- `POST /auth/oauth2/v1/token` — OAuth 2.0 Password Grant authentication
-- `GET /data/pricing/chains/v1/` — chain constituent lookup for a single RIC
-- `POST /data/historical-pricing/v1/views/events` — historical trade events for multiple RICs
-- Refresh token flow (`grant_type=refresh_token`)
-- `POST /auth/oauth2/v1/revoke` — session revocation using HTTP Basic Auth
-- Per-call `verify=False` passed directly to each `httpx` function
-
-
-
-## Setup
+## Project Setup
 
 1. Create and activate a virtual environment.
 
@@ -261,7 +186,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-3. Create your environment file by creating `src/.env` with the following content:
+3. Create your environment file by creating `src/.env` with the following content (see `src/.env.example` file):
 
 ```dotenv
 RDP_BASE_URL=https://api.refinitiv.com
@@ -279,12 +204,6 @@ jupyter lab src/simple_call_nb.ipynb
 
 # Jupyter notebook (async — asyncio.gather)
 jupyter lab src/async_call_nb.ipynb
-
-# Synchronous
-python .\src\example_client.py
-
-# Async — concurrent via asyncio.gather()
-python .\src\example_async_gather.py
 ```
 
 Each script prints the authenticated request URLs and JSON responses. Timing is printed on exit for the async scripts.
