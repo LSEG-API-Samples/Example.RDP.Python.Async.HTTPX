@@ -86,11 +86,11 @@ Install `httpx` and `python-dotenv` into the virtual environment:
 
 - **Windows:**
   ```powershell
-  .\.venv\Scripts\pip.exe install --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --trusted-host pypi.org --no-cache-dir httpx python-dotenv
+  .\.venv\Scripts\pip.exe install --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --trusted-host pypi.org --no-cache-dir -r requirements.txt
   ```
 - **macOS / Linux:**
   ```bash
-  .venv/bin/pip install --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --trusted-host pypi.org --no-cache-dir httpx python-dotenv
+  .venv/bin/pip install --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --trusted-host pypi.org --no-cache-dir -r requirements.txt
   ```
 
 ---
