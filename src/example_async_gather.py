@@ -8,8 +8,9 @@ AUTH_TOKEN_URL = "/auth/oauth2/v1/token"
 AUTH_REVOKE_URL = "/auth/oauth2/v1/revoke"
 HISTORICAL_INTERDAY_SUMMARIES_URL = "/data/historical-pricing/v1/views/interday-summaries/"
 
-HISTORICAL_RICS = ["AAPL.O","MSFT.O","META.O","NVDA.O","GOOG.O","ORCL.N","IBM.N","PLTR.O","AMZN.O","AVGO.O"]  # Fetched concurrently
+HISTORICAL_RICS = ["NVDA.O","AAPL.O","MSFT.O","AMZN.O","GOOG.O","AVGO.O","META.O","ORCL.N","IBM.N","PLTR.O","NFLX.O","TSLA.O","CRM.N","AMD.O","INTC.O","ARM.O","ASML.AS","CSCO.O","WMT.O","LLY.N","JPM.N","XOM.N","V.N","JNJ.N","MU.O","MA.N","COST.O","CVX.N","BAC.N","CAT.N"] # Fetched concurrently
 
+MAX_CONCURRENT_TASKS = 10
 async def post_authentication_async(machine_id, password, app_key, url, client):
     """Authenticate to RDP and return the token response as JSON."""
     # Build the OAuth 2.0 Password Grant request payload.
@@ -112,19 +113,20 @@ async def main():
             print("Authentication successful. Access token obtained.")
 
             access_token = token_data.get("access_token")
-
-            fields = ["TRDPRC_1", "BID", "ASK"]
+            
+            start_time = time.perf_counter()
+            print("Start the wall-clock timer...")
+            fields_list  = ["TRDPRC_1", "BID", "ASK"]
             start = "2025-11-01T00:00:00Z"
             end = "2026-02-28T23:59:59Z"
 
             # Limit how many RIC requests run simultaneously to avoid
             # overwhelming the server or hitting rate limits.
-            max_concurrent_tasks = 5
-            sem = asyncio.Semaphore(max_concurrent_tasks)
+            sem = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
             
             # Build one coroutine per RIC; the semaphore inside get_chain
-            # ensures at most max_concurrent_tasks run at the same time.
-            tasks_history = [get_historical_interday_summaries_async(ric, access_token, HISTORICAL_INTERDAY_SUMMARIES_URL, client, interval="P1D", start=start, end=end, fields=fields, semaphore=sem) for ric in HISTORICAL_RICS]
+            # ensures at most MAX_CONCURRENT_TASKS run at the same time.
+            tasks_history = [get_historical_interday_summaries_async(ric, access_token, HISTORICAL_INTERDAY_SUMMARIES_URL, client, interval="P1D", start=start, end=end, fields=fields_list, semaphore=sem) for ric in HISTORICAL_RICS]
 
             # gather() runs all tasks concurrently. return_exceptions=True
             # prevents a single failure from cancelling the remaining tasks —
@@ -139,6 +141,9 @@ async def main():
                 elif isinstance(result, Exception):
                     raise result  # any other unexpected error
                 print(f"Historical interday summaries for '{ric}': {result}\n\n")
+
+            elapsed = time.perf_counter() - start_time
+            print(f"{__file__} executed for {len(HISTORICAL_RICS)} RICs (with throttling {MAX_CONCURRENT_TASKS}) in {elapsed:0.2f} seconds.")
 
         # --- Exception handlers ordered from most-specific to least-specific ---
         except httpx.HTTPStatusError as e:
@@ -165,7 +170,6 @@ async def main():
         print("Access token revoked successfully.\n")
 
 if __name__ == "__main__":
-    start = time.perf_counter()
+    
     asyncio.run(main())
-    elapsed = time.perf_counter() - start
-    print(f"{__file__} executed for {HISTORICAL_RICS} in {elapsed:0.2f} seconds.")
+   

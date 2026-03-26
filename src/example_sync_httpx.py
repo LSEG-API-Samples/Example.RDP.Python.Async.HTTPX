@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 AUTH_TOKEN_URL = "/auth/oauth2/v1/token"
 AUTH_REVOKE_URL = "/auth/oauth2/v1/revoke"
 HISTORICAL_INTERDAY_SUMMARIES_URL = "/data/historical-pricing/v1/views/interday-summaries/"
-HISTORICAL_RICS = ["AAPL.O","MSFT.O","META.O","NVDA.O","GOOG.O","ORCL.N","IBM.N","PLTR.O","AMZN.O","AVGO.O","TSLA.O","CRM.N","AMD.O","INTC.O","CSCO.O"]  # Fetched sequentially
+
+HISTORICAL_RICS = ["NVDA.O","AAPL.O","MSFT.O","AMZN.O","GOOG.O","AVGO.O","META.O","ORCL.N","IBM.N","PLTR.O","NFLX.O","TSLA.O","CRM.N","AMD.O","INTC.O","ARM.O","ASML.AS","CSCO.O","WMT.O","LLY.N","JPM.N","XOM.N","V.N","JNJ.N","MU.O","MA.N","COST.O","CVX.N","BAC.N","CAT.N"] # Fetched sequentially
 
 
 def _bearer_headers(token) -> dict[str, str]:
@@ -109,16 +110,23 @@ def main() -> None:
 
         # Fetch historical interday summaries for each RIC sequentially.
         # For better performance with many RICs, consider concurrent requests (e.g. using asyncio or threading).
-        fields = ["TRDPRC_1", "BID", "ASK"]
+
+        start_time = time.perf_counter()
+        print("Start the wall-clock timer...")
+        fields_list = ["TRDPRC_1", "BID", "ASK"]
         start_date = "2025-11-01T00:00:00Z"
         end_date = "2026-02-28T23:59:59Z"
 
         for ric in HISTORICAL_RICS:
             history_data = get_historical_interday_summaries(
-                ric, access_token, f"{base_url}{HISTORICAL_INTERDAY_SUMMARIES_URL}", interval="P1D", start=start_date, end=end_date, fields=fields
+                ric, access_token, f"{base_url}{HISTORICAL_INTERDAY_SUMMARIES_URL}", interval="P1D", start=start_date, end=end_date, fields=fields_list
             )
             print("Historical interday summaries retrieved successfully!")
             print(f"Historical interday summaries for '{ric}': {history_data}\n\n")
+
+        elapsed = time.perf_counter() - start_time
+        print(f"{__file__} executed in {elapsed:0.2f} seconds.")
+        print(f"simple_call_nb.ipynb executed for ({len(HISTORICAL_RICS)} RICs) in {elapsed:0.2f} seconds.")
 
         time.sleep(1)  # Sleep briefly to ensure all requests are completed before revoking the token.
         print("Revoking access token...")
@@ -135,7 +143,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    start = time.perf_counter()
     main()
-    elapsed = time.perf_counter() - start
-    print(f"{__file__} executed in {elapsed:0.2f} seconds.")
+    
