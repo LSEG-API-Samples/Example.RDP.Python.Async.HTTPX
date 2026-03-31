@@ -146,6 +146,26 @@ if __name__ == "__main__":
 
 The real payoff of async comes when you have **many requests to make**. With `asyncio.gather()`, you can fire all of them concurrently so the total wall-clock time is roughly that of the single slowest response — instead of the sum of all response times. That is exactly the pattern used in `example_async_gather.py` and `async_call_nb.ipynb` examples for fetching multiple RICs.
 
+## Throttling and Rate Limits 
+
+The Data Platform API request limits (throttles) to effectively manage and protect its service and ensure fair usage across the non-streaming content. 
+
+An application would receive an error from the API call if an application reached or exceeds a limit (especially with the Asynchronous HTTP calls). You required to make some necessary adjustments to rectify the interaction with the API and retry the respective API call. 
+
+Two different server errors on API request limits are: 
+
+| **HTTP Status** | **Detail** |
+| --- | --- |
+| **429** | **Error Message**: too many attempts |
+|  | **Description**: A per account limit where the number of requests per second is limited for each account accessing the platform. If this limit is reached, applications will receive a standard HTTP error (HTTP 429 too many requests). |
+|  | **Suggestion**: Please reduce the number of requests per second and retry. |
+
+Please find more detail regarding the Data Platform HTTP error status messages from the [RDP API General Guidelines](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/documentation) document page.
+
+The Historical Pricing endpoint rate limits information is available on the **Reference** tab of the [Data Platform API Playground](https://apidocs.refinitiv.com/Apps/ApiDocs) page. The current rate limits (**As of Mar 2026**) is as follows:
+
+![historical rate limit](images/historical-pricing-ratelimits.png)
+
 ## Prerequisites
 
 - Python 3.11+
