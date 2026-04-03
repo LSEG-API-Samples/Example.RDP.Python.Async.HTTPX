@@ -254,9 +254,22 @@ async with httpx.AsyncClient(
         print(f"Unexpected error: {e}")
 ```
 
-### Where is asyncio.run(main())?
+#### Where is asyncio.run(main())?
 
-You might wonder why the main code does not call `asyncio.run(main())`. The reason is that Jupyter natively supports top-level `await`, so no `asyncio.run()` wrapper is needed.
+You might wonder why the main code does not call `asyncio.run(main())` statement. The reason is that Jupyter natively supports top-level `await`, so no `asyncio.run()` wrapper is needed.
+
+If your target platform is non-Jupyter environment, you need call asynchronous code and method in `asyncio.run(main())` statement as follows:
+
+```python
+import asyncio
+
+async def man()
+    await something()
+
+if __name__ == "__main__":
+    
+    asyncio.run(main())
+```
 
 ### Comparing to Synchronous Code
 
@@ -292,6 +305,43 @@ with httpx.Client(
     ...
 ```
 
+The `post_authentication_async` method sends a single HTTP POST request to the RDP authentication endpoint asynchronously and retrieves the access token for use in subsequent data requests. Nothing too exciting here — just a straightforward async HTTP call.
+
+Once authentication succeeds, the function parses the RDP Auth service response and stores the following token fields:
+
+- **access_token**: The token used to invoke REST data API calls as described above. The application must keep this credential for further RDP APIs requests.
+- **refresh_token**: Refresh token to be used for obtaining an updated access token before expiration. The application must keep this credential for access token renewal.
+- **expires_in**: Access token validity time in seconds.
+
+### Requesting RDP APIs Data
+
+That brings us to requesting the RDP APIs data. All subsequent REST API calls must pass the Access Token via the `Authorization` HTTP request header as shown below. 
+- Header: 
+    * Authorization = ```Bearer <RDP Access Token>```
+
+Please notice *the space* between the ```Bearer``` and ```RDP Access Token``` values.
+
+The application then builds a request message — either as a JSON body or URL query parameters depending on the service — and sends it to the appropriate API Endpoint. You can find each endpoint's HTTP operations and parameters on Data Platform's [API Playground page](https://apidocs.refinitiv.com/Apps/ApiDocs), an interactive documentation site available to anyone with a valid Data Platform account.
+
+### Getting Multiple Historical Pricing Data Asynchronously 
+
+Moving on to the main benefit of the asynchronous execution model: performing multiple I/O tasks in parallel, like sending multiple HTTP requests at once. I am demonstrating this with the `/data/historical-pricing/v1/views/interday-summaries/{universe}` endpoint, which retrieves time series pricing Interday summaries data (i.e. bar data) for a single RIC code via the following HTTP structure.
+
+```http
+GET /data/historical-pricing/v1/views/interday-summaries/{RIC Code}?{params} HTTP/1.1
+Authorization: Bearer {access token}
+Host: api.refinitiv.com
+```
+
+I am using 30 RICs from various exchanges — S&P 500, Nasdaq Composite, and others — as sample RIC codes.
+
+```python
+HISTORICAL_RICS = ["NVDA.O","AAPL.O","MSFT.O","AMZN.O","GOOG.O","AVGO.O","META.O","ORCL.N","IBM.N","PLTR.O","NFLX.O","TSLA.O","CRM.N","AMD.O","INTC.O","ARM.O","ASML.AS","CSCO.O","WMT.O","LLY.N","JPM.N","XOM.N","V.N","JNJ.N","MU.O","MA.N","COST.O","CVX.N","BAC.N","CAT.N"] 
+```
+
+Please note that my Data Platform account *does not have permission* to retrieve [ASML](https://www.asml.com/en) (`ASML.AS`) data. I included this RIC intentionally to demonstrate how to handle an error with asynchronous execution model.
+
+[TBD]
 
 
 
