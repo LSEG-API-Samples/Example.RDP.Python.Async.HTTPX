@@ -1,7 +1,7 @@
-# Data Platform APIs HTTP REST Application using Httpx
+# Asynchronous LSEG Data Platform REST APIs with Python HTTPX
 
 - Version: 1.0
-- Last update: Mar 2026
+- Last update: Apr 2026
 - Environment: Python + JupyterLab + Data Platform Account
 - Prerequisite: Data Platform access/entitlements
 
@@ -174,6 +174,10 @@ Each script prints the authenticated request URLs and JSON responses. Timing is 
 
 - All examples use `verify=False` to disable TLS certificate verification. This is intended for local/dev environments only (e.g. where a TLS-inspecting proxy such as ZScaler is in use). Remove `verify=False` or supply a proper CA bundle for production use.
 - Do not log or print access tokens in production applications.
+
+## Development Detail
+
+See [Article.md](./Article.md) file.
 
 ## License
 

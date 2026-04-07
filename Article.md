@@ -1,4 +1,4 @@
-# Data Platform APIs HTTP REST Application using Httpx
+# Asynchronous LSEG Data Platform REST APIs with Python HTTPX
 
 - Version: 1.0
 - Last update: Mar 2026
@@ -686,9 +686,44 @@ df_all[df_all["RIC"] == "AMZN.O"]
 
 That’s all I have to say about how to use historical-pricing data from Data Platform APIs.
 
-## Conclustion
+## What If I Use Other Programming Languages?
 
-[tbd]
+The asynchronous execution model is not limited to Python. Most modern programming languages have built-in or well-supported async HTTP capabilities, so the same patterns demonstrated in this article — concurrent requests, throttling with a semaphore, and per-result error handling — translate naturally to other ecosystems.
+
+Here are the async-capable HTTP clients for some popular languages:
+
+| Language | Library / API |
+| --- | --- |
+| **Java** | [Built-in `HttpClient`](https://openjdk.org/groups/net/httpclient/intro.html) (Java 11+) | 
+| **Java** | [Apache HttpClient 5](https://hc.apache.org/httpcomponents-client-5.6.x/index.html) | 
+| **C#** | [Built-in `HttpClient`](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient) | 
+| **JavaScript / TypeScript** | [Built-in Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) | 
+| **Go** | [Native `net/http`](https://pkg.go.dev/net/http#Client) |
+
+In all cases, the general approach is the same: fire multiple requests concurrently, cap the in-flight count to stay within server rate limits, and handle each result independently so a single failure does not abort the rest.
+
+## Conclusion
+
+Before I finish, let me wrap up with a few key takeaways.
+
+Asynchronous execution model is a powerful tool when you need to make many HTTP requests at once. As demonstrated in this project, using `asyncio.gather()` with a shared `httpx.AsyncClient` lets all 30 RIC requests run concurrently — so the total wall-clock time is roughly that of the single slowest response, rather than the sum of all response times. That is a significant improvement over the synchronous approach, where each request must wait for the previous one to complete before moving on.
+
+That said, async code does introduce more moving parts — coroutines, semaphores, and per-result exception handling — so it is worth asking whether that complexity is justified for your use case. For a small number of requests, or for applications that are naturally sequential, the simpler synchronous approach is probably the better choice. For bulk data retrieval across many instruments, async pays off quickly.
+
+[HTTPX](https://www.python-httpx.org/) is what makes this all come together cleanly. Its [Requests-compatible API](https://www.python-httpx.org/compatibility/) means there is almost no learning curve if you are already familiar with the Requests library — the method names, parameters, and response objects are nearly identical. At the same time, HTTPX ships with [first-class async support](https://www.python-httpx.org/async/) out of the box via `httpx.AsyncClient`, so you can adopt the asynchronous model without switching to a completely different library. On top of that, HTTPX offers a set of modern API features — built-in connection pooling via `Client`/`AsyncClient`, timeout configuration, automatic redirect following, and HTTP/2 support — that make it a solid drop-in upgrade from Requests for both simple scripts and production applications.
+
+[LSEG Data Platform](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) provide a straightforward, RESTful interface to a broad range of financial content — Historical Pricing, ESG, News, Research, and more — all behind a single OAuth 2.0 authenticated endpoint. The [API Playground](https://apidocs.refinitiv.com/Apps/ApiDocs) is a great starting point for exploring available endpoints, parameters, and response schemas.
+
+**One important thing to keep in mind**: the Data Platform enforces per-account rate limits. If you send too many concurrent requests, you will receive an **HTTP 429 Too Many Requests** error. Always throttles your concurrency, and be ready to reduce your request rate if you start seeing 429 responses.
+
+For further reading, I recommend the following resources:
+
+- [Data Platform APIs Quick Start](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/quick-start)
+- [Data Platform APIs Tutorials](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials)
+- [HTTPX Documentation](https://www.python-httpx.org/)
+- [Python asyncio Documentation](https://docs.python.org/3/library/asyncio.html)
+
+
 
 
 
