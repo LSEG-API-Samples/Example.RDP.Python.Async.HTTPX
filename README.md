@@ -54,11 +54,11 @@ asyncio.run(main())
 
 **Synchronous** code runs tasks one at a time — each request must complete before the next one starts. The program blocks and waits at every I/O-bound call, so if a request takes 60 seconds, nothing else runs for those 60 seconds. Fine for a single request, but a real bottleneck when fetching data with many calls.
 
-![synchronous](images/synchronous_simple.png)
+![synchronous](images/02_synchronous_simple.png)
 
 **Asynchronous** code lets multiple tasks run concurrently. While one request is waiting for a network response, the event loop hands control to the next task instead of sitting idle.
 
-![asynchronous](images/asynchronous_simple.png)
+![asynchronous](images/04_asynchronous_simple.png)
 
 The real payoff comes when you have **many requests to make**. With `asyncio.gather()`, all requests are fired concurrently so the total time is roughly that of the single slowest response — not the sum of all response times. That is exactly the pattern used in `example_async_gather.py` and `async_call_nb.ipynb`.
 
