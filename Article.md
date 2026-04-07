@@ -17,9 +17,9 @@ This project demonstrates how to use [`httpx`](https://www.python-httpx.org/) to
 
 **Note**: A basic knowledge of Python [built-in asyncio](https://docs.python.org/3/library/asyncio.html) library is required to understand example codes.
 
-## What is Data Platform APIs?
+## What are Data Platform APIs?
 
-[LSEG Data Platform](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) (RDP APIs, also known as Delivery Platform in LSEG Real-Time) provides simple web based API access to a broad range of LSEG content.
+Let’s start with what the Data Platform APIs are. [LSEG Data Platform](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) (RDP APIs, also known as Delivery Platform in LSEG Real-Time) provides simple web based API access to a broad range of LSEG content.
 
 RDP APIs give developers seamless and holistic access to all of the LSEG content such as Historical Pricing, Environmental Social and Governance (ESG), News, Research, etc, and commingled with their content, enriching, integrating, and distributing the data through a single interface, delivered wherever they need it.  The RDP APIs delivery mechanisms are the following:
 * Request - Response: RESTful web service (HTTP GET, POST, PUT or DELETE) 
@@ -34,9 +34,11 @@ For more detail regarding the Data Platform, please see the following APIs resou
 - [Tutorials](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials) page.
 - [RDP APIs: Introduction to the Request-Response API](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials#introduction-to-the-request-response-api) page.
 
+That covers and overview of Data Platform APIs.
+
 ## What is HTTPX?
 
-[HTTPX](https://www.python-httpx.org/) is a full featured modern HTTP client for Python 3. It provides a set of synchronous and modern asynchronous APIs with [HTTP/2](https://httpwg.org/specs/rfc7540.html) supported. It is largely [compatible with the Requests library](https://www.python-httpx.org/compatibility/), so any Python developers can migrate their existing [Requests](https://requests.readthedocs.io/en/latest/) library code to the HTTPX easily.
+Now let me turn to HTTPX library introduction. [HTTPX](https://www.python-httpx.org/) is a full featured modern HTTP client for Python 3. It provides a set of synchronous and modern asynchronous APIs with [HTTP/2](https://httpwg.org/specs/rfc7540.html) supported. It is largely [compatible with the Requests library](https://www.python-httpx.org/compatibility/), so any Python developers can migrate their existing [Requests](https://requests.readthedocs.io/en/latest/) library code to the HTTPX easily.
 
 ```python
 import httpx
@@ -83,7 +85,11 @@ async def main():
 asyncio.run(main())
 ```
 
+That’s all I have to say about HTTPX library introduction.
+
 ## What are Synchronous and Asynchronous Execution Models?
+
+That brings us to Synchronous and Asynchronous terms. What are they? 
 
 **Synchronous** code runs tasks one at a time in a strict sequence — each task must finish before the next one starts. The application pauses and waits at every blocking call. For example, the `httpx.get()` function call below (equivalent to `requests.get()`) blocks the entire program until the HTTP response arrives:
 
@@ -109,7 +115,7 @@ if __name__ == "__main__":
 
 If the HTTP request takes 60 seconds, the program idles for those 60 seconds before executing the next line. For a single request this is fine, but it becomes a bottleneck when you need to fetch data for many symbols or endpoints.
 
-![synchronous](images/synchronous_simple.png)
+![synchronous](images/02_synchronous_simple.png)
 
 On the other hand, **Asynchronous** code allows multiple tasks to run concurrently in a non-blocking manner. While one task is waiting for I/O (such as a network response), the event loop can hand control to another task (execute next line of codes) instead of sitting idle. The example below uses `asyncio.create_task()` to launch a fetch in the background and immediately continues to the next line — without waiting for the response:
 
@@ -134,15 +140,21 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-![asynchronous code result](images/02_httpx_async.png)
+![asynchronous code result](images/03_httpx_async.png)
 
-![asynchronous](images/asynchronous_simple.png)
+![asynchronous](images/04_asynchronous_simple.png)
 
 The real payoff of async comes when you have **many requests to make**. With `asyncio.gather()`, you can fire all of them concurrently so the total wall-clock time is roughly that of the single slowest response — instead of the sum of all response times. That is exactly the pattern used in `example_async_gather.py` and `async_call_nb.ipynb` examples for fetching multiple RICs.
 
+### What are Coroutines?
+
+You will see the term **coroutines** a lot in this article. What does it mean? The [Python Coroutines](https://docs.python.org/3/library/asyncio-task.html#coroutines) is functions that can pause and resume their execution, allowing other tasks to run in the meantime. The coroutines functions always declared with the `async/await` syntax like the asynchronous Python asyncio example above.
+
+Let’s leave the Synchronous/Asynchronous definition there.
+
 ## Throttling and Rate Limits 
 
-The Data Platform API request limits (throttles) to effectively manage and protect its service and ensure fair usage across the non-streaming content. 
+Now, what about Data Platform APIs request limit. The Data Platform API request limits (throttles) to effectively manage and protect its service and ensure fair usage across the non-streaming content. 
 
 An application would receive an error from the API call if an application reached or exceeds a limit (especially with the Asynchronous HTTP calls). You required to make some necessary adjustments to rectify the interaction with the API and retry the respective API call. 
 
@@ -158,8 +170,7 @@ Please find more detail regarding the Data Platform HTTP error status messages f
 
 The Historical Pricing endpoint rate limits information is available on the **Reference** tab of the [Data Platform API Playground](https://apidocs.refinitiv.com/Apps/ApiDocs) page. The current rate limits (**As of Mar 2026**) is as follows:
 
-![historical rate limit](images/historical-pricing-ratelimits.png)
-
+![historical rate limit](images/05_historical-pricing-ratelimits.png)
 
 ## Security Notes
 
@@ -220,6 +231,13 @@ async def post_authentication_async(machine_id, password, app_key, url, client):
 ```
 
 The `raise_for_status()` call handles any non-[HTTP 200 OK](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/200) response — such as 4xx or 5xx errors — by raising an exception that propagates back to the caller.
+
+The `post_authentication_async` method sends a single HTTP POST request to the RDP authentication endpoint asynchronously and retrieves the access token for use in subsequent data requests. Nothing too exciting here — just a straightforward async HTTP call.
+
+You maybe noticed that the code just define a function is like a normal HTTP POST request function except the following different:
+
+- define a function name with `async def` syntax
+- call the `AsyncClient.post()` statement with `await` syntax
 
 Moving on to the main code. The `async with` block opens a shared `httpx.AsyncClient` and guarantees its connection pool is closed cleanly when the block exits, whether it completes normally or raises an exception. Inside the block, `post_authentication_async()` *is awaited* to obtain the Bearer token before any data requests are made.
 
@@ -290,7 +308,7 @@ def post_authentication(machine_id, password, app_key, url, client):
 # Main code, use httpx.Client.
 with httpx.Client(
     verify=False,
-    base_url=base_url,
+    base_url="https://api.refinitiv.com",
     timeout=10.0,
     default_encoding="utf-8",
     follow_redirects=True,
@@ -304,8 +322,6 @@ with httpx.Client(
         print(f"HTTP error occurred during HTTP Request: {exc.request.url}: {exc.response.status_code} - {exc.response.text}")
     ...
 ```
-
-The `post_authentication_async` method sends a single HTTP POST request to the RDP authentication endpoint asynchronously and retrieves the access token for use in subsequent data requests. Nothing too exciting here — just a straightforward async HTTP call.
 
 Once authentication succeeds, the function parses the RDP Auth service response and stores the following token fields:
 
@@ -341,7 +357,340 @@ HISTORICAL_RICS = ["NVDA.O","AAPL.O","MSFT.O","AMZN.O","GOOG.O","AVGO.O","META.O
 
 Please note that my Data Platform account *does not have permission* to retrieve [ASML](https://www.asml.com/en) (`ASML.AS`) data. I included this RIC intentionally to demonstrate how to handle an error with asynchronous execution model.
 
-[TBD]
+That brings us to the code that sends HTTP GET request to the Data Platform `/data/historical-pricing/v1/views/interday-summaries/{universe}` endpoint. 
+
+```python
+async def get_historical_interday_summaries_async(ric, token, url, client, interval, start, end, fields, semaphore=None):
+    """Request historical Interday summaries data for a single RIC."""
+    print(f"Fetching historical interday summaries... for RIC: {ric}")
+
+    # Bearer token authenticates the caller; Content-Type signals a JSON response is expected.
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Build the query string for the interday-summaries endpoint.
+    # adjustments: apply standard corporate-action and price corrections so that
+    # the returned series is comparable across the full date range.
+    # fields: comma-separated list of data columns to include in the response.
+    params = {
+        "interval": interval,
+        "start": start,
+        "end": end,
+        "adjustments": "exchangeCorrection,manualCorrection,CCH,CRE,RPO,RTS",
+        "fields": ",".join(fields)
+    }
+
+    # Acquire the semaphore slot before sending the request so that at most
+    # `semaphore._value` (e.g. 3) requests are in-flight at the same time.
+    # When no semaphore is provided, send the request immediately without throttling.
+    if semaphore:
+        async with semaphore:
+            response_history = await client.get(f"{url}{ric}", params=params, headers=headers)
+    else:
+        response_history = await client.get(f"{url}{ric}", params=params, headers=headers)
+
+    print(f"Request URL: {response_history.url}")
+
+    # Raise an exception for 4xx/5xx HTTP errors; lets the caller handle
+    # status-specific logic (e.g. 429 rate-limit vs. 401 auth failure).
+    response_history.raise_for_status()
+
+    # Deserialise and return the JSON payload for further processing by the caller.
+    return response_history.json()
+```
+
+The `get_historical_interday_summaries_async` method sends a single HTTP GET request to the RDP endpoint asynchronously and retrieves historical data from the Data Platform. Like the `post_authentication_async` method above, it defines a method with `async def` syntax and calls `AsyncClient.get()` with `await` syntax.
+
+You may have noticed the `semaphore` parameter. This [`asyncio.Semaphore`](https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore) object limits the number of concurrent coroutines that can access a specific resource or block of code simultaneously (throttle). To call `AsyncClient.get()` with a semaphore, use the following code:
+
+```python
+# Acquire the semaphore slot before sending the request so that at most
+# `semaphore._value` (e.g. 3) requests are in-flight at the same time.
+# When no semaphore is provided, send the request immediately without throttling.
+if semaphore:
+    async with semaphore:
+        response_history = await client.get(f"{url}{ric}", params=params, headers=headers)
+```
+
+Now we have the code to get Historical Pricing asynchronously, let move on the the main code that calls the `get_historical_interday_summaries_async` method.
+
+On the main code, I am calling the `get_historical_interday_summaries_async` method inside the same `async with` block with a shared `httpx.AsyncClient` as follows:
+
+```python
+async with httpx.AsyncClient(
+    verify=False,
+    base_url="https://api.refinitiv.com",
+    timeout=10.0,
+    follow_redirects=True,
+) as client:
+    
+    try:
+        # --- Authentication (must complete before any data requests) ---
+        access_token = token_data.get("access_token")
+
+        display(Markdown("**Start the wall-clock timer...**"))
+        start_time = time.perf_counter()
+
+        # Limit how many RIC requests run simultaneously to avoid
+        # overwhelming the server or hitting rate limits.
+        max_concurrent_tasks = 10
+        sem = asyncio.Semaphore(max_concurrent_tasks)
+
+        fields = ["TRDPRC_1", "BID", "ASK"]
+        start_date = "2025-11-01T00:00:00Z"
+        end_date = "2026-02-28T23:59:59Z"
+
+        # Build one coroutine per RIC; the semaphore inside each call
+        # ensures at most max_concurrent_tasks run at the same time.
+        tasks_history = [
+            get_historical_interday_summaries_async(
+                ric, access_token, HISTORICAL_INTERDAY_SUMMARIES_URL, client,
+                interval="P1D", start=start_date, end=end_date, fields=fields, semaphore=sem
+            )
+            for ric in HISTORICAL_RICS
+        ]
+
+        # gather() runs all tasks concurrently. return_exceptions=True
+        # prevents a single failure from cancelling the remaining tasks —
+        # each exception is returned as a value instead of being raised.
+        results_history = await asyncio.gather(*tasks_history, return_exceptions=True)
+
+        # Pair each RIC with its result (or exception)  to be a dictionary, and handle individually.
+        result_data_dict = dict(zip(HISTORICAL_RICS, results_history))
+        for ric, result in result_data_dict.items():
+            if isinstance(result, httpx.HTTPStatusError):
+                raise result   # 4xx / 5xx HTTP response
+            elif isinstance(result, httpx.RequestError):
+                raise result   # network-level failure (includes timeouts)
+            elif isinstance(result, Exception):
+                raise result   # any other unexpected error
+            print(f"Historical interday summaries for '{ric}': {result}\n\n")
+
+        elapsed = time.perf_counter() - start_time
+        elapsed_string = f"**Sending Historical-Pricing for ({len(HISTORICAL_RICS)} RICs (with throttling {max_concurrent_tasks})) in {elapsed:0.2f} seconds.**"
+        display(Markdown(elapsed_string))
+
+        # revoke access token code
+
+    # --- Exception handlers ordered from most-specific to least-specific ---
+    except httpx.HTTPStatusError as e:
+        # Server returned a 4xx or 5xx status code.
+        print(f"HTTP error during request: {e.request.url} {e.response.status_code} - {e.response.text}")
+    ...
+```
+
+So, now let’s look at the code part-by-part. The main code starts a wall-clock timer after receiving an access token from the Data Platform, and print out that it start the timer using Jupyter [`display`](https://ipython.readthedocs.io/en/stable/api/generated/IPython.display.html) module.
+
+```python
+# --- Authentication (must complete before any data requests) ---
+
+display(Markdown("**Start the wall-clock timer...**"))
+start_time = time.perf_counter()
+```
+
+Next, it creates a semaphore and builds a list of `get_historical_interday_summaries_async` coroutines — one per RIC — stored in the `tasks_history` list. The maximum concurrent coroutines is set to *10* via `asyncio.Semaphore` object.
+
+```python
+# Limit how many RIC requests run simultaneously to avoid
+# overwhelming the server or hitting rate limits.
+max_concurrent_tasks = 10
+sem = asyncio.Semaphore(max_concurrent_tasks)
+# Build one coroutine per RIC; the semaphore inside each call
+# ensures at most max_concurrent_tasks run at the same time.
+tasks_history = [
+    get_historical_interday_summaries_async(
+        ric, access_token, HISTORICAL_INTERDAY_SUMMARIES_URL, client,
+        interval="P1D", start=start_date, end=end_date, fields=fields, semaphore=sem
+    )
+    for ric in HISTORICAL_RICS
+]
+```
+
+That brings us to [`asyncio.gather`](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather), which runs all the coroutines in `tasks_history` *concurrently*. The `return_exceptions=True` parameter ensures that any exception from a coroutine is returned as a result value rather than being raised immediately — so a single failure does not cancel the remaining tasks. All coroutines tasks in the group are allowed to complete regardless of errors.
+
+```python
+# gather() runs all tasks concurrently. return_exceptions=True
+# prevents a single failure from cancelling the remaining tasks —
+# each exception is returned as a value instead of being raised.
+results_history = await asyncio.gather(*tasks_history, return_exceptions=True)
+```
+
+Since the final list (our `result_history` variable) contains a mix of successful results and exception object, the code must manual iterate through the results and check their types to handle errors individually. 
+
+```python
+# Pair each RIC with its result (or exception)  to be a dictionary, and handle individually.
+result_data_dict = dict(zip(HISTORICAL_RICS, results_history))
+for ric, result in result_data_dict.items():
+    if isinstance(result, httpx.HTTPStatusError):
+        raise result   # 4xx / 5xx HTTP response
+    elif isinstance(result, httpx.RequestError):
+        raise result   # network-level failure (includes timeouts)
+    elif isinstance(result, Exception):
+        raise result   # any other unexpected error
+    print(f"Historical interday summaries for '{ric}': {result}\n\n")
+```
+
+For the `ASML.AS` RIC that my account does not have permission for, the Data Platform Historical Pricing endpoint returns *HTTP 200 (OK)* — but with a permission-denied payload in the response body. Because it is not a 4xx/5xx error, it passes the exception checks and ends up in `result_data_dict` as a regular result.
+
+```json
+[
+    {
+        "universe": {
+            "ric": "ASML.AS"
+        },
+        "status": {
+            "code": "TS.Interday.UserNotPermission.70112",
+            "message": "User does not have permission for this universe."
+        }
+    }
+]
+```
+
+And lastly, check the time used by all 30 RIC requests and print out the number of seconds using Jupyter [`display`](https://ipython.readthedocs.io/en/stable/api/generated/IPython.display.html) module.
+
+```python
+elapsed = time.perf_counter() - start_time
+elapsed_string = f"**Sending Historical-Pricing for ({len(HISTORICAL_RICS)} RICs (with throttling {max_concurrent_tasks})) in {elapsed:0.2f} seconds.**"
+display(Markdown(elapsed_string))
+```
+
+Example Asynchronous Results
+
+Start the timer:
+
+![async call start](images/06_async_start.png)
+
+Finished all Historical Pricing requests:
+
+![async call end](images/07_async_end.png)
+
+### Comparing to Synchronous Code
+
+The synchronous `get_historical_interday_summaries` method is *almost* identical to its async counterpart. The only real differences are the absence of `async`/`await` and the `semaphore` parameter, and the use of `httpx.Client` instead of `httpx.AsyncClient`. The code runs line by line — each call blocks and waits for the network response before moving on.
+
+```python
+def get_historical_interday_summaries(ric, token, url, client, interval, start, end, fields):
+    """Request historical Interday summaries data for a single RIC."""
+    print(f"Fetching historical interday summaries... for RIC: {ric}")
+
+    headers = { ... }
+    params = { ... }
+
+    response_history =  client.get(f"{url}{ric}", params=params, headers=headers)
+
+    print(f"Request URL: {response_history.url}")
+   
+    response_history.raise_for_status()
+    # Deserialise and return the JSON payload for further processing by the caller.
+    return response_history.json()
+
+```
+
+The synchronous main code is much simpler — it just loops over the `HISTORICAL_RICS` list and calls `get_historical_interday_summaries` for each RIC one at a time, waiting for each response before moving to the next.
+
+```python
+# Main code, use httpx.Client.
+with httpx.Client(
+    verify=False,
+    base_url="https://api.refinitiv.com",
+    timeout=10.0,
+    default_encoding="utf-8",
+    follow_redirects=True,
+) as client:
+    try:
+        # Authenticate and get the access token.
+        
+        access_token = auth_response["access_token"]
+
+        display(Markdown("**Start the wall-clock timer...**"))
+        start_time = time.perf_counter()
+
+        for ric in HISTORICAL_RICS:
+            history_data =  get_historical_interday_summaries(
+                ric, access_token, HISTORICAL_INTERDAY_SUMMARIES_URL, client, interval="P1D", start=start_date, end=end_date, fields=fields
+            )
+            print("Historical interday summaries retrieved successfully!")
+            print(f"Historical interday summaries for '{ric}': {history_data}\n\n")
+
+        elapsed = time.perf_counter() - start_time
+        elapsed_string = f"**Sending Historical-Pricing for ({len(HISTORICAL_RICS)}) RICs in {elapsed:0.2f} seconds.**"
+        display(Markdown(elapsed_string))
+        ...
+    except httpx.HTTPStatusError as exc:
+        print(f"HTTP error occurred during HTTP Request: {exc.request.url}: {exc.response.status_code} - {exc.response.text}")
+    ...
+```
+
+Example Synchronous Results
+
+Start the timer:
+
+![sync call start](images/08_sync_start.png)
+
+Finished all Historical Pricing requests:
+
+![sync call end](images/09_sync_end.png)
+
+**Note**: I intentionally waited for a period of time to minimize the impact of any potential network or endpoint data caching (if any) before comparing the results of the asynchronous and synchronous notebook examples.
+
+That’s all I have to say about multiple RDP data request using asynchronous exceution model.
+
+### Bonus: Working with the Historical Data
+
+The historical-pricing response is returned as a JSON payload. You can find the full message specification in the Historical Pricing endpoint's Reference Guide on the [Data Platform API Playground](https://apidocs.refinitiv.com/Apps/ApiDocs) page.
+
+If your application works with raw JSON, you can use the data directly as-is.
+
+![json_data](images/10_result_json.png)
+
+If you prefer working with [Pandas DataFrames](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html), the snippet below converts the results into one combined DataFrame. It first filters out any RICs that came back with a permission-denied payload (those won't have a `headers` field), then concatenates the remaining data into a single DataFrame with a `RIC` column at the front.
+
+```python
+# Clean Up all returns error message
+result_data_dict = {
+    ric: payload
+    for ric, payload in result_data_dict.items()
+    if isinstance(payload, list) and payload and "headers" in payload[0]
+}
+
+# Build one DataFrame per RIC and tag it with the RIC name via assign().
+# Using a list comprehension + a single concat is faster than appending
+# DataFrames in a loop, because concat allocates memory once for the full result.
+df_all = pd.concat(
+    [
+        pd.DataFrame(
+            payload[0]["data"],
+            columns=[h["name"] for h in payload[0]["headers"]]  # Column names from the API response headers.
+        ).assign(RIC=ric)   # Tag each row with its RIC; added as the last column for now.
+        for ric, payload in result_data_dict.items()
+    ],
+    ignore_index=True,  # Reset the row index across all concatenated DataFrames.
+)
+
+# Reposition RIC as the first column — done once here rather than
+# calling insert() on every individual DataFrame before concatenation.
+df_all.insert(0, "RIC", df_all.pop("RIC"))
+```
+
+![df_data](images/11_result_df.png)
+
+To filter the combined DataFrame down to a single RIC, use a boolean mask:
+
+```python
+df_all[df_all["RIC"] == "AMZN.O"]
+```
+
+![df_data](images/12_result_df.png)
+
+That’s all I have to say about how to use historical-pricing data from Data Platform APIs.
+
+## Conclustion
+
+[tbd]
+
+
 
 
 
