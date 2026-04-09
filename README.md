@@ -188,6 +188,9 @@ Apache 2.0. See [LICENSE.md](LICENSE.md).
 For further details, please check out the following resources:
 
 - [LSEG Data Platform](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) on the [LSEG Developers Portal](https://developers.lseg.com/en/) website.
+- [Data Platform APIs Quick Start](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/quick-start)
+- [Data Platform APIs Tutorials](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials)
+- [Data Platform APIs Documents](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/documents)
 - [HTTPX library](https://www.python-httpx.org/) and [GitHub](https://github.com/encode/httpx) pages.
 - [Python Asyncio library](https://docs.python.org/3/library/asyncio.html) page.
 - [Python's asyncio: A Hands-On Walkthrough](https://realpython.com/async-io-python/)

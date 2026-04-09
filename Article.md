@@ -686,6 +686,8 @@ df_all[df_all["RIC"] == "AMZN.O"]
 
 That’s all I have to say about how to use historical-pricing data from Data Platform APIs.
 
+
+
 ## What If I Use Other Programming Languages?
 
 The asynchronous execution model is not limited to Python. Most modern programming languages have built-in or well-supported async HTTP capabilities, so the same patterns demonstrated in this article — concurrent requests, throttling with a semaphore, and per-result error handling — translate naturally to other ecosystems.
@@ -716,10 +718,17 @@ That said, async code does introduce more moving parts — coroutines, semaphore
 
 **One important thing to keep in mind**: the Data Platform enforces per-account rate limits. If you send too many concurrent requests, you will receive an **HTTP 429 Too Many Requests** error. Always throttles your concurrency, and be ready to reduce your request rate if you start seeing 429 responses.
 
-For further reading, I recommend the following resources:
+## Next Step 
+
+The `asyncio.gather` is not the only option that Python Asyncio offers for developers.  If you prefer to manual manage and run coroutine, the [`asyncio.create_task`](https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task) migth suite your need. This low-level method schedules a coroutine to run as a background task immediately, without waiting.
+
+Introduced in Python version 3.11, [`asyncio.TaskGroup`](https://docs.python.org/3/library/asyncio-task.html#asyncio.TaskGroup) provides a modern, cleaner, and fail-safe way for structured concurrency I/O bound operations. It is suitable for I/O piplines that any failure should abort the whole operation.
+
+There are much more Data Platform endpoints, HTTPX and Asyncio features that you can explore to find the things that suite your technical and bussiness needs. For further reading, I recommend the following resources:
 
 - [Data Platform APIs Quick Start](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/quick-start)
 - [Data Platform APIs Tutorials](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials)
+- [Data Platform APIs Documents](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/documents)
 - [HTTPX Documentation](https://www.python-httpx.org/)
 - [Python asyncio Documentation](https://docs.python.org/3/library/asyncio.html)
 
