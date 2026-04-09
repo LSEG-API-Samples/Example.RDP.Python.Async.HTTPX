@@ -1,4 +1,4 @@
-# Asynchronous LSEG Data Platform REST APIs with Python HTTPX
+# Concurrent LSEG Data Platform API Calls with Python Asyncio and HTTPX
 
 - Version: 1.0
 - Last update: Apr 2026
@@ -13,7 +13,7 @@ That said, there are other Python HTTP libraries worth considering — [HTTPX](h
 
 I was drawn to HTTPX because it provides a **requests-compatible API** while also supporting **asynchronous operations** out of the box. That combination made migrating from Requests to HTTPX straightforward, with the added benefit of async support when needed.
 
-This project demonstrates how to use [`httpx`](https://www.python-httpx.org/) to authenticate and retrieve data from [LSEG Data Platform APIs](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) via HTTP endpoints — covering both synchronous and asynchronous patterns for comparison.
+This project shows how to use [HTTPX](https://www.python-httpx.org/) with [LSEG Data Platform APIs](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis) for authentication and data retrieval, with side-by-side synchronous and asynchronous examples. Its main purpose is to demonstrate the practical benefit of concurrent asynchronous HTTP calls: when many requests are needed, total wall-clock time is typically much lower than sequential execution while still allowing controlled throttling.
 
 **Note**: A basic knowledge of Python [built-in asyncio](https://docs.python.org/3/library/asyncio.html) library is required to understand example codes.
 
