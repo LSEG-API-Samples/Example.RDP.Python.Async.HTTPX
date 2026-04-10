@@ -201,7 +201,7 @@ The required credentials are:
 - **Username**: The machine ID associated with your account.
 - **Password**: The password for the machine ID.
 - **Client ID (AppKey)**: A unique identifier for your app, generated via the App Key Generator. Keep it private.
-- **Grant Type `password`: Used for the initial authentication request with a username/password combination.
+- **Grant Type**: `password`: Used for the initial authentication request with a username/password combination.
 
 I strongly suggest reading the [Data Platform: Authorization - All about tokens](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials#authorization-all-about-tokens) tutorial for a deeper understanding of RDP authentication.
 
