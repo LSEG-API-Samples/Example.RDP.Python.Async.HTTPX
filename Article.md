@@ -1,4 +1,4 @@
-# Concurrent LSEG Data Platform API Calls with Python Asyncio and HTTPX
+# Concurrent Data Platform API Calls with Python Asyncio and HTTPX
 
 - Version: 1.0
 - Last update: Apr 2026
