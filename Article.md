@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
 If the HTTP request takes 60 seconds, the program idles for those 60 seconds before executing the next line. For a single request this is fine, but it becomes a bottleneck when you need to fetch data for many symbols or endpoints.
 
-![synchronous](images/02_synchronous_simple.png)
+![synchronous operation diagram](images/02_synchronous_simple.png)
 
 On the other hand, **Asynchronous** code allows multiple tasks to run concurrently in a non-blocking manner. While one task is waiting for I/O (such as a network response), the event loop can hand control to another task (execute next line of codes) instead of sitting idle. The example below uses `asyncio.create_task()` method to launch a fetch in the background and immediately continues to the next line — without waiting for the response:
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
 ![asynchronous code result](images/03_httpx_async.png)
 
-![asynchronous](images/04_asynchronous_simple.png)
+![asynchronous operation diagram](images/04_asynchronous_simple.png)
 
 The real payoff of async comes when you have **many requests to make**. With `asyncio.gather()`, you can fire all of them concurrently so the total wall-clock time is roughly that of the single slowest response — instead of the sum of all response times. That is exactly the pattern used in `example_async_gather.py` and `async_call_nb.ipynb` examples for fetching multiple RICs.
 
