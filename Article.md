@@ -1,7 +1,7 @@
 # Concurrent LSEG Data Platform API Calls with Python Asyncio and HTTPX
 
 - Version: 1.0
-- Last update: Mar 2026
+- Last update: Apr 2026
 - Environment: Python + JupyterLab + Data Platform Account
 - Prerequisite: Data Platform access/entitlements
 
@@ -69,7 +69,7 @@ with httpx.Client(base_url='http://httpbin.org') as client:
   print(r.status_code)
 ```
 
-For asynchronous use, [`httpx.AsyncClient`](https://www.python-httpx.org/api/#asyncclient) works with [asyncio](https://docs.python.org/3/library/asyncio.html), [Trio](https://trio.readthedocs.io/en/stable/), and [AnyIO](https://anyio.readthedocs.io/en/stable/). I am demonstrating with asyncio in this project.:
+For asynchronous use, [`httpx.AsyncClient`](https://www.python-httpx.org/api/#asyncclient) object to work with [asyncio](https://docs.python.org/3/library/asyncio.html), [Trio](https://trio.readthedocs.io/en/stable/), and [AnyIO](https://anyio.readthedocs.io/en/stable/). I am demonstrating with asyncio in this project.:
 
 Example:
 
@@ -117,7 +117,7 @@ If the HTTP request takes 60 seconds, the program idles for those 60 seconds bef
 
 ![synchronous](images/02_synchronous_simple.png)
 
-On the other hand, **Asynchronous** code allows multiple tasks to run concurrently in a non-blocking manner. While one task is waiting for I/O (such as a network response), the event loop can hand control to another task (execute next line of codes) instead of sitting idle. The example below uses `asyncio.create_task()` to launch a fetch in the background and immediately continues to the next line — without waiting for the response:
+On the other hand, **Asynchronous** code allows multiple tasks to run concurrently in a non-blocking manner. While one task is waiting for I/O (such as a network response), the event loop can hand control to another task (execute next line of codes) instead of sitting idle. The example below uses `asyncio.create_task()` method to launch a fetch in the background and immediately continues to the next line — without waiting for the response:
 
 ```python
 import asyncio
@@ -174,7 +174,7 @@ The Historical Pricing endpoint rate limits information is available on the **Re
 
 ## Security Notes
 
-- All examples use `verify=False` to disable TLS certificate verification. This is intended for local/dev environments only (e.g. where a TLS-inspecting proxy such as ZScaler is in use). Remove `verify=False` or supply a proper CA bundle for production use.
+- All examples use `verify=False` parameter to disable TLS certificate verification. This is intended for local/dev environments only (e.g. where a TLS-inspecting proxy such as ZScaler is in use). Remove `verify=False` parameterparameter or supply a proper CA bundle for production use.
 - Do not log or print access tokens in production applications.
 
 ## Code Walkthrough
@@ -187,10 +187,10 @@ The examples use the following Python libraries for demonstration in Jupyter Not
 | --- | --- |
 | `asyncio` | Python's built-in async event loop and concurrency primitives |
 | `os` | Read environment variables |
-| `time` | Wall-clock timing via `time.perf_counter()` |
+| `time` | Wall-clock timing via `time.perf_counter()` statement |
 | `httpx` | Async HTTP client |
 | `IPython.display` | Render formatted Markdown output in the notebook |
-| `dotenv` | Load credentials from `src/.env` |
+| `dotenv` | Load credentials from `src/.env` file |
 
 ### Data Platform Authentication
 
@@ -201,7 +201,7 @@ The required credentials are:
 - **Username**: The machine ID associated with your account.
 - **Password**: The password for the machine ID.
 - **Client ID (AppKey)**: A unique identifier for your app, generated via the App Key Generator. Keep it private.
-- **Grant Type `password`**: Used for the initial authentication request with a username/password combination.
+- **Grant Type `password`: Used for the initial authentication request with a username/password combination.
 
 I strongly suggest reading the [Data Platform: Authorization - All about tokens](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials#authorization-all-about-tokens) tutorial for a deeper understanding of RDP authentication.
 
@@ -230,7 +230,7 @@ async def post_authentication_async(machine_id, password, app_key, url, client):
     return response_auth.json()
 ```
 
-The `raise_for_status()` call handles any non-[HTTP 200 OK](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/200) response — such as 4xx or 5xx errors — by raising an exception that propagates back to the caller.
+The `raise_for_status()` statement call handles any non-[HTTP 200 OK](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/200) response — such as 4xx or 5xx errors — by raising an exception that propagates back to the caller.
 
 The `post_authentication_async` method sends a single HTTP POST request to the RDP authentication endpoint asynchronously and retrieves the access token for use in subsequent data requests. Nothing too exciting here — just a straightforward async HTTP call.
 
@@ -239,7 +239,7 @@ You maybe noticed that the code just define a function is like a normal HTTP POS
 - define a function name with `async def` syntax
 - call the `AsyncClient.post()` statement with `await` syntax
 
-Moving on to the main code. The `async with` block opens a shared `httpx.AsyncClient` and guarantees its connection pool is closed cleanly when the block exits, whether it completes normally or raises an exception. Inside the block, `post_authentication_async()` *is awaited* to obtain the Bearer token before any data requests are made.
+Moving on to the main code. The `async with` block opens a shared `httpx.AsyncClient` instance and guarantees its connection pool is closed cleanly when the block exits, whether it completes normally or raises an exception. Inside the block, `post_authentication_async()` method **is awaited** to obtain the Bearer token before any data requests are made.
 
 ```python
 # Main Code
@@ -291,7 +291,7 @@ if __name__ == "__main__":
 
 ### Comparing to Synchronous Code
 
-For a single HTTP request, the synchronous equivalent is *almost* identical. The only real differences are the absence of `async`/`await` and the use of `httpx.Client` instead of `httpx.AsyncClient`. The code runs line by line — each statement blocks and waits for the network response before moving on.
+For a single HTTP request, the synchronous equivalent is *almost* identical. The only real differences are the absence of `async`/`await` and the use of `httpx.Client` instance instead of `httpx.AsyncClient`. The code runs line by line — each statement blocks and waits for the network response before moving on.
 
 ```python
 def post_authentication(machine_id, password, app_key, url, client):
@@ -403,7 +403,7 @@ async def get_historical_interday_summaries_async(ric, token, url, client, inter
 
 The `get_historical_interday_summaries_async` method sends a single HTTP GET request to the RDP endpoint asynchronously and retrieves historical data from the Data Platform. Like the `post_authentication_async` method above, it defines a method with `async def` syntax and calls `AsyncClient.get()` with `await` syntax.
 
-You may have noticed the `semaphore` parameter. This [`asyncio.Semaphore`](https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore) object limits the number of concurrent coroutines that can access a specific resource or block of code simultaneously (throttle). To call `AsyncClient.get()` with a semaphore, use the following code:
+You may have noticed the `semaphore` parameter. This [`asyncio.Semaphore`](https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore) object limits the number of concurrent coroutines that can access a specific resource or block of code simultaneously (throttle). To call `AsyncClient.get()` statement with a semaphore, use the following code:
 
 ```python
 # Acquire the semaphore slot before sending the request so that at most
@@ -508,7 +508,7 @@ tasks_history = [
 ]
 ```
 
-That brings us to [`asyncio.gather`](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather), which runs all the coroutines in `tasks_history` *concurrently*. The `return_exceptions=True` parameter ensures that any exception from a coroutine is returned as a result value rather than being raised immediately — so a single failure does not cancel the remaining tasks. All coroutines tasks in the group are allowed to complete regardless of errors.
+That brings us to [`asyncio.gather`](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather) method, which runs all the coroutines in `tasks_history` **concurrently**. The `return_exceptions=True` parameter ensures that any exception from a coroutine is returned as a result value rather than being raised immediately — so a single failure does not cancel the remaining tasks. All coroutines tasks in the group are allowed to complete regardless of errors.
 
 ```python
 # gather() runs all tasks concurrently. return_exceptions=True
@@ -532,7 +532,7 @@ for ric, result in result_data_dict.items():
     print(f"Historical interday summaries for '{ric}': {result}\n\n")
 ```
 
-For the `ASML.AS` RIC that my account does not have permission for, the Data Platform Historical Pricing endpoint returns *HTTP 200 (OK)* — but with a permission-denied payload in the response body. Because it is not a 4xx/5xx error, it passes the exception checks and ends up in `result_data_dict` as a regular result.
+For the `ASML.AS` RIC that my account does not have permission for, the Data Platform Historical Pricing endpoint returns *HTTP 200 (OK)* — but with a permission-denied payload in the response body. Because it is not a 4xx/5xx error, it passes the exception checks and ends up in `result_data_dict` variable as a regular result.
 
 ```json
 [
@@ -568,7 +568,7 @@ Finished all Historical Pricing requests:
 
 ### Comparing to Synchronous Code
 
-The synchronous `get_historical_interday_summaries` method is *almost* identical to its async counterpart. The only real differences are the absence of `async`/`await` and the `semaphore` parameter, and the use of `httpx.Client` instead of `httpx.AsyncClient`. The code runs line by line — each call blocks and waits for the network response before moving on.
+The synchronous `get_historical_interday_summaries` method is *almost* identical to its async counterpart. The only real differences are the absence of `async`/`await` syntax and the `semaphore` parameter, and the use of `httpx.Client` instance instead of `httpx.AsyncClient`. The code runs line by line — each call blocks and waits for the network response before moving on.
 
 ```python
 def get_historical_interday_summaries(ric, token, url, client, interval, start, end, fields):
@@ -588,7 +588,7 @@ def get_historical_interday_summaries(ric, token, url, client, interval, start, 
 
 ```
 
-The synchronous main code is much simpler — it just loops over the `HISTORICAL_RICS` list and calls `get_historical_interday_summaries` for each RIC one at a time, waiting for each response before moving to the next.
+The synchronous main code is much simpler — it just loops over the `HISTORICAL_RICS` list and calls `get_historical_interday_summaries` method for each RIC one at a time, waiting for each response before moving to the next.
 
 ```python
 # Main code, use httpx.Client.
@@ -635,7 +635,7 @@ Finished all Historical Pricing requests:
 
 **Note**: I intentionally waited for a period of time to minimize the impact of any potential network or endpoint data caching (if any) before comparing the results of the asynchronous and synchronous notebook examples.
 
-That’s all I have to say about multiple RDP data request using asynchronous exceution model.
+That’s all I have to say about multiple RDP data request using asynchronous execution model.
 
 ### Bonus: Working with the Historical Data
 
@@ -720,21 +720,14 @@ That said, async code does introduce more moving parts — coroutines, semaphore
 
 ## Next Step 
 
-The `asyncio.gather` is not the only option that Python Asyncio offers for developers.  If you prefer to manual manage and run coroutine, the [`asyncio.create_task`](https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task) migth suite your need. This low-level method schedules a coroutine to run as a background task immediately, without waiting.
+The `asyncio.gather` is not the only option that Python Asyncio offers for developers.  If you prefer to manual manage and run coroutine, the [`asyncio.create_task`](https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task) might suite your need. This low-level method schedules a coroutine to run as a background task immediately, without waiting.
 
-Introduced in Python version 3.11, [`asyncio.TaskGroup`](https://docs.python.org/3/library/asyncio-task.html#asyncio.TaskGroup) provides a modern, cleaner, and fail-safe way for structured concurrency I/O bound operations. It is suitable for I/O piplines that any failure should abort the whole operation.
+Introduced in Python version 3.11, [`asyncio.TaskGroup`](https://docs.python.org/3/library/asyncio-task.html#asyncio.TaskGroup) provides a modern, cleaner, and fail-safe way for structured concurrency I/O bound operations. It is suitable for I/O pipelines that any failure should abort the whole operation.
 
-There are much more Data Platform endpoints, HTTPX and Asyncio features that you can explore to find the things that suite your technical and bussiness needs. For further reading, I recommend the following resources:
+There are much more Data Platform endpoints, HTTPX and Asyncio features that you can explore to find the things that suite your technical and business needs. For further reading, I recommend the following resources:
 
 - [Data Platform APIs Quick Start](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/quick-start)
 - [Data Platform APIs Tutorials](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/tutorials)
 - [Data Platform APIs Documents](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/documents)
 - [HTTPX Documentation](https://www.python-httpx.org/)
 - [Python asyncio Documentation](https://docs.python.org/3/library/asyncio.html)
-
-
-
-
-
-
-

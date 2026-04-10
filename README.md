@@ -130,7 +130,7 @@ Both notebooks cover the same RDP API workflow — authentication, fetching hist
 
 ## Security Notes
 
-- All examples use `verify=False` to disable TLS certificate verification. This is intended for local/dev environments only (e.g. where a TLS-inspecting proxy such as ZScaler is in use). Remove `verify=False` or supply a proper CA bundle for production use.
+- All examples use `verify=False` parameter to disable TLS certificate verification. This is intended for local/dev environments only (e.g. where a TLS-inspecting proxy such as ZScaler is in use). Remove `verify=False` parameter or supply a proper CA bundle for production use.
 - Do not log or print access tokens in production applications.
 
 ## Project Setup
