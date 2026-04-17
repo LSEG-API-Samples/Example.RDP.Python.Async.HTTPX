@@ -251,6 +251,7 @@ async with httpx.AsyncClient(
 ) as client:
     # --- Authentication (must complete before any data requests) ---
     try:
+        AUTH_TOKEN_URL = "/auth/oauth2/v1/token"
         token_data = await post_authentication_async(machine_id, password, app_key, AUTH_TOKEN_URL, client)
         print("Authentication successful. Access token obtained.")
 
@@ -315,6 +316,7 @@ with httpx.Client(
 ) as client:
     try:
         # Authenticate and get the access token.
+        AUTH_TOKEN_URL = "/auth/oauth2/v1/token"
         auth_response = post_authentication(machine_id, password, app_key, AUTH_TOKEN_URL, client)
         access_token = auth_response["access_token"]
         print("Authentication successful! Access token obtained.\n")
@@ -441,6 +443,7 @@ async with httpx.AsyncClient(
         fields = ["TRDPRC_1", "BID", "ASK"]
         start_date = "2025-11-01T00:00:00Z"
         end_date = "2026-02-28T23:59:59Z"
+        HISTORICAL_INTERDAY_SUMMARIES_URL = "/data/historical-pricing/v1/views/interday-summaries/"
 
         # Build one coroutine per RIC; the semaphore inside each call
         # ensures at most max_concurrent_tasks run at the same time.
@@ -606,6 +609,8 @@ with httpx.Client(
 
         display(Markdown("**Start the wall-clock timer...**"))
         start_time = time.perf_counter()
+
+        HISTORICAL_INTERDAY_SUMMARIES_URL = "/data/historical-pricing/v1/views/interday-summaries/"
 
         for ric in HISTORICAL_RICS:
             history_data =  get_historical_interday_summaries(
