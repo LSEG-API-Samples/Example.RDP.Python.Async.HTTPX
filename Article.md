@@ -727,7 +727,7 @@ That said, async code does introduce more moving parts — coroutines, semaphore
 
 The `asyncio.gather` is not the only option that Python Asyncio offers for developers.  If you prefer to manual manage and run coroutine, the [`asyncio.create_task`](https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task) might suite your need. This low-level method schedules a coroutine to run as a background task immediately, without waiting.
 
-Introduced in Python version 3.11, [`asyncio.TaskGroup`](https://docs.python.org/3/library/asyncio-task.html#asyncio.TaskGroup) provides a modern, cleaner, and fail-safe way for structured concurrency I/O bound operations. It is suitable for I/O pipelines that any failure should abort the whole operation.
+Introduced in Python version 3.11, [`asyncio.TaskGroup`](https://docs.python.org/3/library/asyncio-task.html#asyncio.TaskGroup) method provides a modern, cleaner, and fail-safe way for structured concurrency I/O bound operations. It is suitable for I/O pipelines that any failure should abort the whole operation.
 
 There are much more Data Platform endpoints, HTTPX and Asyncio features that you can explore to find the things that suite your technical and business needs. For further reading, I recommend the following resources:
 
