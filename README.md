@@ -193,6 +193,7 @@ For further details, please check out the following resources:
 - [Data Platform APIs Documents](https://developers.lseg.com/en/api-catalog/refinitiv-data-platform/refinitiv-data-platform-apis/documents)
 - [HTTPX library](https://www.python-httpx.org/) and [GitHub](https://github.com/encode/httpx) pages.
 - [Python Asyncio library](https://docs.python.org/3/library/asyncio.html) page.
+- [A Conceptual Overview of asyncio](https://docs.python.org/3/howto/a-conceptual-overview-of-asyncio.html#a-conceptual-overview-of-asyncio) article.
 - [Python's asyncio: A Hands-On Walkthrough](https://realpython.com/async-io-python/)
 - [Asynchronous HTTP Requests in Python with HTTPX and asyncio](https://www.twilio.com/en-us/blog/asynchronous-http-requests-in-python-with-httpx-and-asyncio)
 - [Asyncio gather function document](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather) page.
