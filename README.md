@@ -80,7 +80,7 @@ Please find more detail regarding the Data Platform HTTP error status messages f
 
 The Historical Pricing endpoint rate limits information is available on the **Reference** tab of the [Data Platform API Playground](https://apidocs.refinitiv.com/Apps/ApiDocs) page. The current rate limits (**As of Mar 2026**) is as follows:
 
-![historical rate limit](images/historical-pricing-ratelimits.png)
+![historical rate limit](images/05_historical-pricing-ratelimits.png)
 
 ## Prerequisites
 
