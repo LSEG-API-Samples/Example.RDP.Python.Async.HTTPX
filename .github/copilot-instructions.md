@@ -25,13 +25,23 @@ After completing all steps, the project root should look like this:
 ```
 RDP_HTTPX/
 ├── .github/
-│   └── copilot-instruction.md
+│   └── copilot-instructions.md
 ├── .venv/                  # virtual environment (not committed to Git)
+├── .vscode/
+│   └── launch.json
+├── images/
 ├── src/
 │   ├── .env                # local secrets (not committed to Git)
-│   └── .env.example        # template committed to Git
+│   ├── .env.example        # template committed to Git
+│   ├── async_call_nb.ipynb
+│   ├── example_async_gather.py
+│   ├── example_client.py
+│   ├── example_sync_httpx.py
+│   └── sync_call_nb.ipynb
 ├── .gitignore
+├── Article.md
 ├── LICENSE.md
+├── README.md
 └── requirements.txt
 ```
 
@@ -177,7 +187,7 @@ Next, create file name `launch.json` in `.vscode/` folder with the following con
 
 ## Part 2: Initialize the Git Repository
 
-### Step 8 — Add `LICENSE.md`
+### Step 9 — Add `LICENSE.md`
 
 Create `LICENSE.md` in the project root containing the full [Apache 2.0 license text](https://www.apache.org/licenses/LICENSE-2.0):
 
@@ -185,7 +195,7 @@ Then change the `Copyright [yyyy] [name of copyright owner]` line to `Copyright 
 
 ---
 
-### Step 9 — Add `.gitignore`
+### Step 10 — Add `.gitignore`
 
 Create a `.gitignore` file in the project root suitable for Python projects. Use the template from [gitignore.io for Python](https://www.toptal.com/developers/gitignore/api/python).
 
@@ -201,7 +211,7 @@ The `.gitignore` **must** include the following entries (add them if not already
 
 ---
 
-### Step 10 — Initialize Git and create the initial commit
+### Step 11 — Initialize Git and create the initial commit
 
 Run the following commands in order from the project root:
 
@@ -213,7 +223,7 @@ git commit -m "init main"
 
 ---
 
-### Step 11 — Rename the default branch to `main`
+### Step 12 — Rename the default branch to `main`
 
 ```bash
 git branch -m master main
@@ -231,7 +241,7 @@ Expected output: `* main`
 
 ## Part 3: Validation
 
-### Step 12 — Run a package smoke test
+### Step 13 — Run a package smoke test
 
 Run a one-line Python check to confirm `httpx` and `python-dotenv` are installed and import correctly.
 
@@ -248,5 +258,54 @@ If successful, output should include:
 
 - `httpx` followed by a version number
 - `python-dotenv` followed by a version number
+- `dotenv module path` pointing to the virtual environment site-packages directory
+
+---
+
+## Part 4: Code Style
+
+All Python source files in this project must follow these conventions:
+
+### General
+
+- Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting and naming.
+- Use 4 spaces for indentation (no tabs).
+- Maximum line length: 120 characters.
+- Use `snake_case` for functions and variables, `UPPER_SNAKE_CASE` for module-level constants.
+- Use double quotes (`"`) for strings.
+
+### Imports
+
+- Group imports in this order: standard library, third-party packages, local modules.
+- Separate each group with a blank line.
+- Import `httpx` and `dotenv` as top-level imports (not inside functions).
+
+### Docstrings & Comments
+
+- Every public function must have a one-line docstring enclosed in triple double-quotes (`"""`).
+- Use inline comments sparingly to explain *why*, not *what*.
+
+### Type Hints
+
+- Use type hints for function return types (e.g., `-> dict[str, str]`).
+- Parameter type hints are optional but encouraged for public functions.
+
+### Environment Variables
+
+- Load environment variables via `python-dotenv` (`load_dotenv()`).
+- Access secrets only through `os.getenv()` — never hard-code credentials.
+- Use a helper function (e.g., `_require_env`) to fail early on missing required variables.
+
+### HTTP Requests
+
+- Use `httpx` for all HTTP calls (both sync and async).
+- Always call `response.raise_for_status()` after requests to surface API errors.
+- Use `data=` for form-encoded payloads and `json=` for JSON payloads.
+- For async code, use `httpx.AsyncClient` as a context manager and control concurrency with `asyncio.Semaphore`.
+
+### Error Handling
+
+- Raise exceptions early for missing configuration.
+- Let `httpx` exceptions propagate unless specific recovery logic is needed.
 - `dotenv module path` pointing to the virtual environment site-packages directory
 
