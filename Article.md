@@ -1,4 +1,4 @@
-# Concurrent Data Platform API Calls with Python Asyncio and HTTPX
+# Concurrent Data Requests with asyncio.gather() and HTTPX
 
 - Version: 1.0
 - Last update: Apr 2026

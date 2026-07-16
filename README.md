@@ -1,7 +1,7 @@
-# Concurrent Data Platform API Calls with Python Asyncio and HTTPX
+# Concurrent Data Requests with asyncio.gather() and HTTPX
 
 - Version: 1.0
-- Last update: Apr 2026
+- Last update: July 2026
 - Environment: Python + JupyterLab + Data Platform Account
 - Prerequisite: Data Platform access/entitlements
 
