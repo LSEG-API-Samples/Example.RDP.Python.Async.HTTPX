@@ -1,4 +1,4 @@
-# Concurrent Data Requests with asyncio.gather() and HTTPX
+# Part 1: Concurrent REST API Requests with asyncio.gather() and HTTPX
 
 - Version: 1.0
 - Last update: Jul 2026
