@@ -23,6 +23,8 @@ This project shows how to use [HTTPX](https://www.python-httpx.org/) with [LSEG 
 
 ## What is HTTPX?
 
+**Note**: [HTTPX2](https://github.com/pydantic/httpx2) is a fork-continuation development of the original HTTPX from version 0.28.1. It offers a **highly compatible API** with HTTPX, but it is not a runtime or drop-in replacement. For a new project that needs long-term active maintenance and security updates, consider HTTPX2. This article is based on the original HTTPX.
+
 [HTTPX](https://www.python-httpx.org/) is a modern Python HTTP client that supports both synchronous and asynchronous APIs, plus [HTTP/2](https://httpwg.org/specs/rfc7540.html). It is largely [compatible with the Requests library](https://www.python-httpx.org/compatibility/), so migrating existing code is straightforward.
 
 For synchronous use, [`httpx.Client`](https://www.python-httpx.org/advanced/clients/) is the equivalent of `requests.Session()` — it maintains a shared connection pool across multiple requests:

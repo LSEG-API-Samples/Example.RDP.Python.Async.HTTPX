@@ -38,6 +38,8 @@ That covers and overview of Data Platform APIs.
 
 ## What is HTTPX?
 
+**Note**: [HTTPX2](https://github.com/pydantic/httpx2) is a fork-continuation development of the original HTTPX from version 0.28.1. It offers a **highly compatible API** with HTTPX, but it is not a runtime or drop-in replacement. For a new project that needs long-term active maintenance and security updates, consider HTTPX2. This article is based on the original HTTPX.
+
 Now let me turn to HTTPX library introduction. [HTTPX](https://www.python-httpx.org/) is a full featured modern HTTP client for Python 3. It provides a set of synchronous and modern asynchronous APIs with [HTTP/2](https://httpwg.org/specs/rfc7540.html) supported. It is largely [compatible with the Requests library](https://www.python-httpx.org/compatibility/), so any Python developers can migrate their existing [Requests](https://requests.readthedocs.io/en/latest/) library code to the HTTPX easily.
 
 ```python
